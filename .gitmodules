@@ -1,0 +1,6 @@
+[submodule "3rdparty/libuv"]
+	path = 3rdparty/libuv
+	url = https://github.com/libuv/libuv.git
+[submodule "3rdparty/googletest"]
+	path = 3rdparty/googletest
+	url = https://github.com/google/googletest.git

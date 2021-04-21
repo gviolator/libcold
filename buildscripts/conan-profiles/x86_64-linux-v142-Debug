@@ -1,0 +1,13 @@
+cc_compiler=gcc-10
+cxx_compiler=g++-10
+
+[settings]
+os=Linux
+os_build=Linux
+arch=x86_64
+arch_build=x86_64
+build_type=Debug
+compiler=gcc
+compiler.version=10
+compiler.libcxx=libstdc++
+
