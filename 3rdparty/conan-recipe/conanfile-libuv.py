@@ -13,6 +13,14 @@ class LibuvConan(ConanFile):
     default_options = {"shared": True}
     generators = "cmake"
 
+    @property
+    def os(self):
+        return self.settings.get_safe('os')
+
+    @property
+    def compiler(self):
+        return self.settings.get_safe('compiler')
+
     def source(self):
         src = path.abspath(path.join(os.environ['THIRDPARTY_ROOT'], 'libuv'))
         print('Nothing to do with sources. Using 3rdparty source: {}'.format(src))
@@ -23,9 +31,17 @@ class LibuvConan(ConanFile):
         cmake = CMake(self)
         cmake.definitions['LIBUV_BUILD_TESTS'] = False
         cmake.definitions['LIBUV_BUILD_BENCH'] = False
+        if self.os == 'Windows' and self.compiler == 'clang':
+            cmake.definitions['CMAKE_EXPORT_COMPILE_COMMANDS'] = True
+            cmake.generator = 'Ninja'
+
         cmake.configure(source_folder=src)
 
+        
+
         return cmake
+
+
 
     def build(self):
         self._get_cmake().build()

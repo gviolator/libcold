@@ -9,7 +9,7 @@ echo "Buildscripts: $BuildscriptsPath"
 
 $BuildscriptsPath/linux/setenv.sh
 
-source "$BuildscriptsPath/.venv/bin/activate"
+# source "$BuildscriptsPath/.venv/bin/activate"
 
 conan create $ThirdPartyPath/conan-recipe/conanfile-libuv.py libcold/local -o shared=True --profile $BuildscriptsPath/conan-profiles/x86_64-linux-v142-Debug
 

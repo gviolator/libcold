@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+	<!-- Containers -->
+	<!-- std::vector<T> -->
+	<Type Name="std::__1::vector&lt;*&gt;">
+			<DisplayString>{{ size={(size_t)(__end_ - __begin_)} }}</DisplayString>
+			<Expand>
+				<Item Name="[capacity]">(size_t)(__end_cap_.__value_ - __begin_)</Item>
+				<ArrayItems>
+					<Size>__end_ - __begin_</Size>
+					<ValuePointer>__begin_</ValuePointer>
+					</ArrayItems>
+				</Expand>
+	</Type>
+
+	<!-- std::array<T, Size> -->
+	<Type Name="std::__1::array&lt;*,*&gt;">
+		<DisplayString>{{ size={$T2}}} </DisplayString>
+
+		<Expand>
+			<ArrayItems>
+				<Size>$T2</Size>
+				<ValuePointer>__elems_</ValuePointer>
+			</ArrayItems>
+		</Expand>
+
+	</Type>
+
+	<!-- std::map<T, Size> -->
+	<Type Name="std::__1::map&lt;*&gt;" Priority="MediumHigh">
+		<DisplayString>THE MAP</DisplayString>
+		<!--<Expand>
+			<Item Name="[comparator]" ExcludeView="simple">_Mypair</Item>
+			<Item Name="[allocator]" ExcludeView="simple">_Mypair._Myval2</Item>
+			<TreeItems>
+				<Size>_Mypair._Myval2._Myval2._Mysize</Size>
+				<HeadPointer>_Mypair._Myval2._Myval2._Myhead-&gt;_Parent</HeadPointer>
+				<LeftPointer>_Left</LeftPointer>
+				<RightPointer>_Right</RightPointer>
+				<ValueNode Condition="_Isnil == 0" Name="[{_Myval.first}]">_Myval,view(MapHelper)</ValueNode>
+			</TreeItems>
+		</Expand>-->
+	</Type>
+
+
+	  <Type Name="std::__1::list&lt;*&gt;">
+		  <DisplayString>{{ size={__size_alloc_.__value_} }}</DisplayString>
+
+		  <Expand>
+			  <!-- <Item Name="[allocator]" ExcludeView="simple">_Mypair</Item> -->
+			  <LinkedListItems>
+				  <Size>__size_alloc_.__value_</Size>
+				  <HeadPointer>__end_</HeadPointer>
+				  <NextPointer>__next_</NextPointer>
+				  <ValueNode>static_cast&lt;$T1&gt;</ValueNode>
+			  </LinkedListItems>
+		  </Expand> -->
+	  </Type>
+
+
+	<!-- std::basic_string<char> -->
+	<Type Name="std::__1::basic_string&lt;char,*&gt;">
+			<DisplayString Condition="(__r_.__value_.__s.__size_ &amp; 1) == 0">
+				{__r_.__value_.__s.__data_, na}
+			</DisplayString>
+			<DisplayString Condition="(__r_.__value_.__s.__size_ &amp; 1) != 0">
+				{__r_.__value_.__l.__data_, na}
+			</DisplayString>
+
+			<Expand>
+				<Item Name="[size (packed)]" Condition="(__r_.__value_.__s.__size_ &amp; 1) == 0">(__r_.__value_.__s.__size_ &gt;&gt; 1) % 256</Item>
+				<Item Name="[size]" Condition="(__r_.__value_.__s.__size_ &amp; 1) != 0">__r_.__value_.__l.__size_</Item>
+			</Expand>
+	</Type>
+
+	<!-- std::basic_string<wchar_t> -->
+	<Type Name="std::__1::basic_string&lt;wchar_t,*&gt;">
+			<DisplayString Condition="(__r_.__value_.__s.__size_ &amp; 1) == 0">
+				{__r_.__value_.__s.__data_, su}
+			</DisplayString>
+			<DisplayString Condition="(__r_.__value_.__s.__size_ &amp; 1) != 0">
+				{__r_.__value_.__l.__data_, su}
+			</DisplayString>
+
+			<Expand>
+				<Item Name="[size (packed)]" Condition="(__r_.__value_.__s.__size_ &amp; 1) == 0">(__r_.__value_.__s.__size_ &gt;&gt; 1) % 256</Item>
+				<Item Name="[size]" Condition="(__r_.__value_.__s.__size_ &amp; 1) != 0">__r_.__value_.__l.__size_</Item>
+			</Expand>
+	</Type>
+
+	<Type Name="std::__1::basic_string_view&lt;*,*&gt;">
+		<Intrinsic Name="size" Expression="__size" />
+		<Intrinsic Name="data" Expression="__data" />
+		<DisplayString>{__data,[__size]}</DisplayString>
+		<Expand>
+			<Item Name="[size]" ExcludeView="simple">size()</Item>
+			<ArrayItems>
+				<Size>size()</Size>
+				<ValuePointer>data()</ValuePointer>
+			</ArrayItems>
+		</Expand>
+	</Type>
+
+
+	<!-- Memory -->
+	<!-- std::unique_ptr -->
+	<Type Name="std::__1::unique_ptr&lt;*&gt;">
+		<SmartPointer Usage="Minimal">__ptr_.__value_</SmartPointer>
+		<DisplayString Condition="__ptr_.__value_ == 0">empty</DisplayString>
+		<DisplayString Condition="__ptr_.__value_ != 0">unique_ptr {*__ptr_.__value_}</DisplayString>
+			<Expand>
+					<Item Condition="__ptr_.__value_ != 0" Name="[ptr]">__ptr_.__value_</Item>
+<!--					<Item Condition="__ptr_.__value_ != 0" Name="[deleter]">_Mypair</Item> -->
+			</Expand>
+	</Type>
+
+	<!-- std::shared_ptr -->
+	<Type Name="std::__1::shared_ptr&lt;*&gt;">
+			<SmartPointer Usage="Minimal">__ptr_</SmartPointer>
+			<DisplayString Condition="__cntrl_ == 0">empty</DisplayString>
+			<DisplayString Condition="__cntrl_ != 0">shared_ptr {*__ptr_} [{__cntrl_->__shared_owners_ + 1} strong ref, {__cntrl_->__shared_weak_owners_} weak ref]</DisplayString>
+
+			<Expand>
+				<Item Condition="__ptr_ != 0" Name="[ptr]">__ptr_</Item>
+				<Item Condition="__cntrl_ != 0" Name="[control block]">*__cntrl_</Item>
+			</Expand>
+	</Type>
+
+	<!-- std::tuple<> -->
+	<Type Name="std::__1::tuple&lt;&gt;">
+		<DisplayString IncludeView="noparens"></DisplayString>
+		<DisplayString ExcludeView="noparens">({*this,view(noparens)})</DisplayString>
+		<Expand/>
+	</Type>
+
+	<!-- std::tuple<T> -->
+	<Type Name="std::__1::tuple&lt;*&gt;">
+		<DisplayString IncludeView="noparens">{__base_.__value_}</DisplayString>
+		<DisplayString ExcludeView="noparens">({*this,view(noparens)})</DisplayString>
+
+		<Expand>
+			<Item Name="[0]">__base_.__value_</Item>
+		</Expand>
+
+	</Type>
+
+	<Type Name="std::__1::__tuple_leaf&lt;*,*,*&gt;">
+		<DisplayString>{__value_}</DisplayString>
+	</Type>
+
+	<!-- std::tuple<T1, T2> -->
+	<!-- std::tuple<T1, T2, T3> -->
+	<Type Name="std::__1::tuple&lt;*,*&gt;">
+		<DisplayString IncludeView="noparens">
+			{((std::__1::__tuple_leaf&lt;0,$T1,0&gt;&amp;)__base_).__value_},{((std::__1::__tuple_leaf&lt;1,$T2,0&gt;&amp;)__base_).__value_}
+		</DisplayString>
+		<DisplayString ExcludeView="noparens">({*this,view(noparens)})</DisplayString>
+
+		<Expand>
+			<Item Name="[0]">((std::__1::__tuple_leaf&lt;0,$T1,0&gt;&amp;)__base_).__value_</Item>
+			<Item Name="[1]">((std::__1::__tuple_leaf&lt;1,$T2,0&gt;&amp;)__base_).__value_</Item>
+		</Expand>
+	</Type>
+
+	<!-- std::tuple<T1, T2, T3> -->
+	<Type Name="std::__1::tuple&lt;*,*,*&gt;">
+		<DisplayString IncludeView="noparens">
+			{((std::__1::__tuple_leaf&lt;0,$T1,0&gt;&amp;)__base_).__value_},{((std::__1::__tuple_leaf&lt;1,$T2,0&gt;&amp;)__base_).__value_},{((std::__1::__tuple_leaf&lt;2,$T3,0&gt;&amp;)__base_).__value_}
+		</DisplayString>
+		<DisplayString ExcludeView="noparens">({*this,view(noparens)})</DisplayString>
+
+		<Expand>
+			<Item Name="[0]">((std::__1::__tuple_leaf&lt;0,$T1,0&gt;&amp;)__base_).__value_</Item>
+			<Item Name="[1]">((std::__1::__tuple_leaf&lt;1,$T2,0&gt;&amp;)__base_).__value_</Item>
+			<Item Name="[2]">((std::__1::__tuple_leaf&lt;2,$T3,0&gt;&amp;)__base_).__value_</Item>
+		</Expand>
+	</Type>
+
+	<!-- std::tuple<T1, T2, T3, T4> -->
+	<Type Name="std::__1::tuple&lt;*,*,*,*&gt;">
+		<DisplayString IncludeView="noparens">
+			{((std::__1::__tuple_leaf&lt;0,$T1,0&gt;&amp;)__base_).__value_}, {((std::__1::__tuple_leaf&lt;1,$T2,0&gt;&amp;)__base_).__value_}, {((std::__1::__tuple_leaf&lt;2,$T3,0&gt;&amp;)__base_).__value_},{((std::__1::__tuple_leaf&lt;3,$T4,0&gt;&amp;)__base_).__value_}
+		</DisplayString>
+		<DisplayString ExcludeView="noparens">({*this,view(noparens)})</DisplayString>
+
+		<Expand>
+			<Item Name="[0]">((std::__1::__tuple_leaf&lt;0,$T1,0&gt;&amp;)__base_).__value_</Item>
+			<Item Name="[1]">((std::__1::__tuple_leaf&lt;1,$T2,0&gt;&amp;)__base_).__value_</Item>
+			<Item Name="[2]">((std::__1::__tuple_leaf&lt;2,$T3,0&gt;&amp;)__base_).__value_</Item>
+			<Item Name="[3]">((std::__1::__tuple_leaf&lt;3,$T4,0&gt;&amp;)__base_).__value_</Item>
+		</Expand>
+	</Type>
+
+	<!-- std::nullopt -->
+	<Type Name="std::__1::nullopt_t">
+		<DisplayString>nullopt</DisplayString>
+	</Type>
+
+	<!-- std::optional<T> -->
+	<Type Name="std::__1::optional&lt;*&gt;">
+		<Intrinsic Name="has_value" Expression="__engaged_"/>
+		<Intrinsic Name="value" Expression="__val_"/>
+		<DisplayString Condition="!has_value()">nullopt</DisplayString>
+		<DisplayString Condition="has_value()">{value()}</DisplayString>
+		<Expand>
+			<Item Condition="has_value()" Name="value">value()</Item>
+		</Expand>
+	</Type>
+
+	<!-- std::variant -->
+	<Type Name="std::__1::variant&lt;*&gt;">
+		<Intrinsic Name="index" Expression="(int)__impl.__index"/>
+		<DisplayString Condition="index() &lt; 0">[valueless_by_exception]</DisplayString>
+		
+		<DisplayString Condition="index() == 0" Optional="true">
+			{{ #{index()}, value={__impl.__data.__head.__value} }}
+		</DisplayString>
+
+		<DisplayString Condition="index() == 1" Optional="true">
+			{{ #{index()}, value={
+				__impl.__data.__tail.__head.__value
+				} }}
+		</DisplayString>
+
+		<DisplayString Condition="index() == 2" Optional="true">
+			{{ #{index()}, value={
+				__impl.__data.__tail.__tail.__head.__value
+				} }}
+		</DisplayString>
+
+		<DisplayString Condition="index() == 3" Optional="true">
+			{{ #{index()}, value={
+				__impl.__data.__tail.__tail.__tail.__head.__value
+				} }}
+		</DisplayString>
+
+		<DisplayString Condition="index() == 4" Optional="true">
+			{{ #{index}, value={
+				__impl.__data.__tail.__tail.__tail.__tail.__head.__value
+				} }}
+		</DisplayString>
+
+		<DisplayString Condition="index() == 5" Optional="true">
+			{{ #{index}, value={
+				__impl.__data.__tail.__tail.__tail.__tail.__tail.__head.__value
+				} }}
+		</DisplayString>
+
+		<Expand>
+			<Item Name="index">index()</Item>
+			<Item Name="[value]" Condition="index() == 0" Optional="true">
+			__impl.__data.__head.__value
+			</Item>
+
+			<Item Name="[value]" Condition="index() == 1" Optional="true">
+			__impl.__data.__tail.__head.__value
+			</Item>
+
+			<Item Name="[value]" Condition="index() == 2" Optional="true">
+			__impl.__data.__tail.__tail.__head.__value
+			</Item>
+
+			<Item Name="[value]" Condition="index() == 3" Optional="true">
+			__impl.__data.__tail.__tail.__tail.__head.__value
+			</Item>
+
+			<Item Name="[value]" Condition="index() == 4" Optional="true">
+			__impl.__data.__tail.__tail.__tail.__tail.__head.__value
+			</Item>
+
+			<Item Name="[value]" Condition="index() == 5" Optional="true">
+			__impl.__data.__tail.__tail.__tail.__tail.__tail.__head.__value
+			</Item>
+		</Expand>
+	</Type>
+
+</AutoVisualizer>
