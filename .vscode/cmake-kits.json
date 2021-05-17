@@ -1,0 +1,13 @@
+[
+  {
+    "name": "Linux clang 12",
+    "compilers": {
+      "C": "~llvm/12.0/bin/clang",
+      "CXX": "~/llvm/12.0/bin/clang++"
+    },
+    "preferredGenerator": {
+      "name": "Ninja"
+    },
+    "keep": true
+  }
+]

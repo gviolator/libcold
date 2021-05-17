@@ -8,7 +8,16 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 file (GLOB_RECURSE Sources "*.cpp" "*.h")
 auto_group_files("${Sources}" "test_runtime")
 
+find_package(GTest REQUIRED)
+
+
 add_executable(${TargetName} ${Sources})
+
+target_link_libraries(${TargetName}
+	PRIVATE
+		GTest::gtest GTest::gtest_main
+)
+
 
 # target_link_libraries(${TargetName}
 # 	PRIVATE

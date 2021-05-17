@@ -9,15 +9,18 @@ fi
 
 BuildscriptsPath=$(dirname $(readlink -f $0))
 BuildscriptsPath=$(dirname $BuildscriptsPath)
-PythonEnvPath=$BuildscriptsPath/.venv
 
-if [ ! -d "$PythonEnvPath" ]; then
-	echo "setup python env ($PythonEnvPath) by ($Python)"
-	$Python -m venv $PythonEnvPath
-fi
+export PATH=~/llvm/12.0/bin:$PATH
 
-source "$PythonEnvPath/bin/activate"
-pip install --requirement $BuildscriptsPath/requirements.txt
+# PythonEnvPath=$BuildscriptsPath/.venv
+
+# if [ ! -d "$PythonEnvPath" ]; then
+# 	echo "setup python env ($PythonEnvPath) by ($Python)"
+# 	$Python -m venv $PythonEnvPath
+# fi
+
+# source "$PythonEnvPath/bin/activate"
+# pip install --requirement $BuildscriptsPath/requirements.txt
 
 
 

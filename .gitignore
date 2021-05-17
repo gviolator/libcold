@@ -3,3 +3,6 @@
 .target/
 workshop/*
 buildscripts/.venv/*
+3rdparty/_build**
+3rdparty/_dist**
+.build**

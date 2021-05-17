@@ -1,0 +1,9 @@
+{
+	"cmake.buildDirectory": "${workspaceFolder}/.build/default.1",
+	"cmake.copyCompileCommands": "${workspaceFolder}/.build/compile_commands.json",
+
+	"clangd.arguments": [
+		"--compile-commands-dir", "${workspaceFolder}/.build/"
+	]
+
+}
