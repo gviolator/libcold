@@ -1,0 +1,18 @@
+{
+	"BuildType": {
+		"default": "debug",
+		"description": "Build Type",
+		"choices": {
+			"debug": {
+				"buildType": "Debug",
+				"short": "Debug"
+			},
+
+			"release": {
+				"buildType": "RelWithDebInfo",
+				"short": "Release"
+			}
+		}
+	}
+
+}

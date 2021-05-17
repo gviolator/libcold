@@ -63,10 +63,10 @@ if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") #configure clang ----------------
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -Xclang -std=c++2a -Xclang -stdlib=libc++")
 #	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-compatibility-version=${CL_VERSION} -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -std=c++2a")
 
-# elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") #configure Microsoft VC -------------------------
-# 	message("!! configure using msvc")
-# 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /JMC /FC /Zc:__cplusplus /std:c++latest /permissive-")
-# #	add_compile_definitions(_HAS_DEPRECATED_RESULT_OF)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") #configure Microsoft VC -------------------------
+	message("!! configure using msvc")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /JMC /FC /Zc:__cplusplus /std:c++latest /permissive-")
+#	add_compile_definitions(_HAS_DEPRECATED_RESULT_OF)
 endif()
 
 if ("${CMAKE_BUILD_TYPE}" MATCHES "Debug")

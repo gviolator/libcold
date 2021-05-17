@@ -9,6 +9,7 @@ file (GLOB_RECURSE Sources "*.cpp" "*.h")
 auto_group_files("${Sources}" "test_runtime")
 
 find_package(GTest REQUIRED)
+find_package(LibUv REQUIRED)
 
 
 add_executable(${TargetName} ${Sources})
@@ -16,6 +17,7 @@ add_executable(${TargetName} ${Sources})
 target_link_libraries(${TargetName}
 	PRIVATE
 		GTest::gtest GTest::gtest_main
+		LibUv::libuv_shared
 )
 
 

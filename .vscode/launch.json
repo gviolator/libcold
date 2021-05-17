@@ -5,6 +5,17 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch: windows",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/.build/default.1/target/test.runtime",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "console": "externalTerminal"
+    },
+    {
       "type": "lldb",
       "request": "launch",
       "name": "lldb on linux",

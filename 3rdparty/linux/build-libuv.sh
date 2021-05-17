@@ -18,6 +18,8 @@ cmake \
 	-DCMAKE_C_COMPILER=clang \
 	-DCMAKE_EXPORT_COMPILE_COMMANDS=YES \
 	-DCMAKE_C_FLAGS=$CompilerFlags \
+	-DLIBUV_BUILD_TESTS=NO \
+	-DLIBUV_BUILD_BENCH=NO \
 	-DCMAKE_INSTALL_PREFIX=$InstallDir \
 	-B $BuildDir \
 	-S $SourceDir\
