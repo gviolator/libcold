@@ -24,7 +24,7 @@ set(LIBCOLD_CMAKE_DIR cmake)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/_dist/x86_64-${CMAKE_BUILD_TYPE}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-message(!!!CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH})
+
 
 
 # configure_file(
@@ -56,18 +56,39 @@ message(!!!CMAKE_PREFIX_PATH = ${CMAKE_PREFIX_PATH})
 # include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 
 
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") #configure clang -------------------------
+message ("** Configure [${CMAKE_SYSTEM_NAME}] with [${CMAKE_CXX_COMPILER_ID}]")
 
-	message("!! configure using clang")
-#	set(CL_VERSION 19.28.29334)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -Xclang -std=c++2a -Xclang -stdlib=libc++")
-#	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-compatibility-version=${CL_VERSION} -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -std=c++2a")
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") #configure Microsoft VC -------------------------
-	message("!! configure using msvc")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /JMC /FC /Zc:__cplusplus /std:c++latest /permissive-")
-#	add_compile_definitions(_HAS_DEPRECATED_RESULT_OF)
+	if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") #configure clang -------------------------
+
+		message("!! configure using clang")
+	#	set(CL_VERSION 19.28.29334)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -Xclang -std=c++2a -Xclang -stdlib=libc++")
+	#	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-compatibility-version=${CL_VERSION} -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -std=c++2a")
+
+	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") #configure Microsoft VC -------------------------
+		message("!! configure using msvc")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /JMC /FC /Zc:__cplusplus /std:c++latest /permissive-")
+	#	add_compile_definitions(_HAS_DEPRECATED_RESULT_OF)
+	endif()
+
+elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+
+	set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+	
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+	# Linux/GCC:
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -fdiagnostics-show-option -Wno-attributes -Wno-unused-result" )
+
+	elseif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+	# Linux/CLANG:
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -fdiagnostics-absolute-paths" )
+
+	endif()
+
 endif()
+
 
 if ("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
 	set(ConfigType "Debug")
@@ -76,9 +97,9 @@ else()
 endif()
 
 
-# add_subdirectory(src/remoting)
-# add_subdirectory(src/runtime)
+add_subdirectory(src/remoting)
+add_subdirectory(src/runtime)
 
 #if (ENABLE_TESTS)
-	add_subdirectory(tests)
+add_subdirectory(tests)
 #endif()
