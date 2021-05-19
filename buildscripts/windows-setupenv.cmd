@@ -1,7 +1,7 @@
 @echo off
 
 
-@set ProjectRootPath=%~dp0..\..\
+@set ProjectRootPath=%~dp0..\
 call :NORMALIZEPATH "%ProjectRootPath%"
 set ProjectRootPath=%RETVAL%
 

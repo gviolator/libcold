@@ -30,7 +30,7 @@ target_include_directories(${TARGET_NAME}
 
 target_link_libraries(${TARGET_NAME}
 	PRIVATE
-		LibUv::libuv
+		LibUv::uv
 #		RapidJSON::RapidJSON
 )
 

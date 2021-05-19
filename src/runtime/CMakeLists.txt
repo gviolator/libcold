@@ -44,7 +44,7 @@ target_include_directories(${TargetName}
 
 target_link_libraries(${TargetName}
 	PUBLIC
-		LibUv::libuv
+		LibUv::uv
 		rapidjson
 		# RapidJSON::RapidJSON
 	PRIVATE

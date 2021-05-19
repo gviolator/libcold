@@ -8,31 +8,33 @@ get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
 get_filename_component(_IMPORT_PREFIX "${_IMPORT_PREFIX}" PATH)
 
 
-add_library(LibUv::libuv STATIC IMPORTED)
-# add_library(LibUv::libuv_static STATIC IMPORTED)
+add_library(LibUv::uv STATIC IMPORTED)
+add_library(LibUv::uv_static STATIC IMPORTED)
 
 set (Arch x86_64)
 set (_IMPORT_PREFIX ${_IMPORT_PREFIX}/3rdparty/_dist/${Arch}-${CMAKE_BUILD_TYPE}/libuv)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 
-	set_target_properties(LibUv::libuv_shared PROPERTIES
+	set_target_properties(LibUv::uv PROPERTIES
 		INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 		INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+		INTERFACE_COMPILE_DEFINITIONS USING_UV_SHARED=1
 		IMPORTED_LOCATION "${_IMPORT_PREFIX}/lib/${CMAKE_BUILD_TYPE}/uv.lib"
 	)
 
-	# set_target_properties(LibUv::libuv_static PROPERTIES
-	# 	INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-	# 	INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-	# 	INTERFACE_LINK_LIBRARIES "${_IMPORT_PREFIX}/lib/${CMAKE_BUILD_TYPE}/uv_a"
-	# )
+	set_target_properties(LibUv::uv_static PROPERTIES
+		INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+		INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+		INTERFACE_LINK_LIBRARIES "${_IMPORT_PREFIX}/lib/${CMAKE_BUILD_TYPE}/uv_a.lib"
+	)
 
 elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
 
-	set_target_properties(LibUv::libuv PROPERTIES
+	set_target_properties(LibUv::uv PROPERTIES
 		INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 		INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+		INTERFACE_COMPILE_DEFINITIONS USING_UV_SHARED=1
 		IMPORTED_LOCATION "${_IMPORT_PREFIX}/lib/libuv.so"
 	)
 
