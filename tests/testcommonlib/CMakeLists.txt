@@ -26,6 +26,6 @@ target_compile_definitions(${TargetName}
 
 target_link_libraries(${TargetName}
 	PUBLIC
-		atdruntime
+		coldruntime
 		GTest::gtest
 )

@@ -2,13 +2,7 @@
 #include "cold/utils/strings.h"
 #include "cold/utils/stringconv.h"
 
-#include <unicode/unistr.h>
 
-
-static_assert(sizeof(wchar_t) == sizeof(uint16_t), "Invalid wide character size");
-
-// using namespace cold::strings_internal;
-using namespace icu;
 
 namespace cold::strings_internal {
 
@@ -197,52 +191,6 @@ bool startWith(std::wstring_view str, std::wstring_view value)
 {
 	return strings_internal::startWith_(str, value);
 }
-
-
-
-namespace {
-
-inline std::wstring wstringFromUnicodeString(const icu::UnicodeString& uStr)
-{
-	std::wstring wstr;
-	wstr.resize(uStr.length());
-	uStr.extract(0, uStr.length(), icu::Char16Ptr{wstr.data()});
-
-	return wstr;
-
-}
-
-} // namespace
-
-
-std::string toUtf8(std::wstring_view wideStr)
-{
-	constexpr UBool IsNullTerminated = false;
-
-	// using ConstCharPtr allow to avoid copying data into internal UnicodeString's buffer, so called buffer aliasing.
-	const UnicodeString uStr{IsNullTerminated, ConstChar16Ptr{wideStr.data()}, static_cast<int32_t>(wideStr.length())};
-
-	std::string bytes;
-	bytes.reserve(wideStr.length());
-	uStr.toUTF8String(bytes);
-
-	return bytes;
-}
-
-std::wstring wstringFromUtf8(std::string_view str)
-{
-	const UnicodeString uStr = UnicodeString::fromUTF8(StringPiece{str.data(), static_cast<int32_t>(str.size())});
-	return wstringFromUnicodeString(uStr);
-}
-
-std::wstring wstringFromUtf8Unescape(std::string_view str)
-{
-	using namespace icu;
-
-	const UnicodeString uStr = UnicodeString::fromUTF8(StringPiece{str.data(), static_cast<int32_t>(str.size())});
-	return wstringFromUnicodeString(uStr.unescape());
-}
-
 
 
 } // namespace cold::strings

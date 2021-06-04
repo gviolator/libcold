@@ -12,7 +12,7 @@ TEST(Network_HttpParser, ParseRequest)
 	constexpr std::string_view ExpectedMethod = "POST";
 	constexpr std::string_view ExpectedResource = "/test/resource request/1";
 
-	const auto line = format("%1 %2 HTTP/1.1\r\n", ExpectedMethod, ExpectedResource);
+	const auto line = strfmt("%1 %2 HTTP/1.1\r\n", ExpectedMethod, ExpectedResource);
 
 	const auto requestData = HttpParser::parseRequestData(line);
 	ASSERT_TRUE(requestData);
@@ -37,7 +37,7 @@ TEST(Network_HttpParser, ParseStatus)
 	constexpr int ExpectedCode = 404;
 	constexpr auto ExpectedMessage = "Resource not found";
 
-	const auto line = format("HTTP/1.1 %1 %2 \r\n", ExpectedCode, ExpectedMessage);
+	const auto line = strfmt("HTTP/1.1 %1 %2 \r\n", ExpectedCode, ExpectedMessage);
 
 	const auto responseStatus = HttpParser::parseStatus(line);
 	ASSERT_TRUE(responseStatus);
@@ -53,8 +53,8 @@ TEST(Network_HttpParser, ParseStatusWithNoMessage)
 {
 	const int expectedCode = 404;
 
-	const auto lineIllformed = format("HTTP/1.1 %1\r\n", expectedCode); // must not be valid, space before phrase is required: https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html
-	const auto line2 = format("HTTP/1.1 %1 \r\n", expectedCode);
+	const auto lineIllformed = strfmt("HTTP/1.1 %1\r\n", expectedCode); // must not be valid, space before phrase is required: https://www.w3.org/Protocols/rfc2616/rfc2616-sec6.html
+	const auto line2 = strfmt("HTTP/1.1 %1 \r\n", expectedCode);
 
 	ASSERT_FALSE(HttpParser::parseStatus(lineIllformed));
 

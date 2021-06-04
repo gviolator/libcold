@@ -9,7 +9,7 @@ namespace cold::threading {
 //-----------------------------------------------------------------------------
 #pragma region stdlib
 
-#if defined(ATD_THREADING_EVENT_STDLIB)
+#if defined(COLD_THREADING_EVENT_STDLIB)
 Event::Event(ResetMode mode, bool signaled): m_event(CreateEvent(nullptr, mode == ResetMode::Manual, signaled ? TRUE : FALSE, nullptr)
 	: m_mode{mode}
 	, m_state{state}
@@ -116,7 +116,7 @@ void ManualResetEvent::reset()
 
 #pragma endregion
 
-#elif defined (ATD_THREADING_EVENT_WINAPI)
+#elif defined (COLD_THREADING_EVENT_WINAPI)
 
 #pragma region WinAPI
 

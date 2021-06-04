@@ -7,3 +7,6 @@
 [submodule "3rdparty/RapidJSON"]
 	path = 3rdparty/RapidJSON
 	url = https://github.com/Tencent/rapidjson.git
+[submodule "3rdparty/cryptopp/cryptopp"]
+	path = 3rdparty/cryptopp/cryptopp
+	url = https://github.com/weidai11/cryptopp.git

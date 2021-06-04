@@ -29,31 +29,31 @@ class RuntimeObject;
 
 // objects
 template<meta::ObjectRepresentable T>
-ComPtr<atd_internal::RuntimeObject<T>> runtimeValue(T&);
+ComPtr<cold_internal::RuntimeObject<T>> runtimeValue(T&);
 
 template<meta::ObjectRepresentable T>
-ComPtr<atd_internal::RuntimeObject<const T>> runtimeValue(const T&);
+ComPtr<cold_internal::RuntimeObject<const T>> runtimeValue(const T&);
 
 // arrays
 template<meta::ArrayRepresentable T>
-ComPtr<atd_internal::RuntimeArray<T>> runtimeValue(T&);
+ComPtr<cold_internal::RuntimeArray<T>> runtimeValue(T&);
 
 template<meta::ArrayRepresentable T>
-ComPtr<atd_internal::RuntimeArray<const T>> runtimeValue(const T&);
+ComPtr<cold_internal::RuntimeArray<const T>> runtimeValue(const T&);
 
 // optionals
 template<meta::OptionalRepresentable T>
-ComPtr<atd_internal::RuntimeOptional<T>> runtimeValue(T&);
+ComPtr<cold_internal::RuntimeOptional<T>> runtimeValue(T&);
 
 template<meta::OptionalRepresentable T>
-ComPtr<atd_internal::RuntimeOptional<const T>> runtimeValue(const T&);
+ComPtr<cold_internal::RuntimeOptional<const T>> runtimeValue(const T&);
 
 // primitives
 template<typename T>
-ComPtr<atd_internal::RuntimePrimitive<T>> runtimeValue(T&);
+ComPtr<cold_internal::RuntimePrimitive<T>> runtimeValue(T&);
 
 template<typename T>
-ComPtr<atd_internal::RuntimePrimitive<const T>> runtimeValue(const T&);
+ComPtr<cold_internal::RuntimePrimitive<const T>> runtimeValue(const T&);
 
 
 
@@ -413,52 +413,52 @@ private:
 } // namespace cold_internal
 
 template<typename T>
-ComPtr<atd_internal::RuntimePrimitive<T>> runtimeValue(T& instance)
+ComPtr<cold_internal::RuntimePrimitive<T>> runtimeValue(T& instance)
 {
-	return cold::com::createInstance<atd_internal::RuntimePrimitive<T>>(instance);
+	return cold::com::createInstance<cold_internal::RuntimePrimitive<T>>(instance);
 }
 
 template<typename T>
-ComPtr<atd_internal::RuntimePrimitive<const T>> runtimeValue(const T& instance)
+ComPtr<cold_internal::RuntimePrimitive<const T>> runtimeValue(const T& instance)
 {
-	return cold::com::createInstance<atd_internal::RuntimePrimitive<const T>>(instance);
+	return cold::com::createInstance<cold_internal::RuntimePrimitive<const T>>(instance);
 }
 
 
 template<meta::OptionalRepresentable T>
-ComPtr<atd_internal::RuntimeOptional<T>> runtimeValue(T& instance)
+ComPtr<cold_internal::RuntimeOptional<T>> runtimeValue(T& instance)
 {
-	return cold::com::createInstance<atd_internal::RuntimeOptional<T>>(instance);
+	return cold::com::createInstance<cold_internal::RuntimeOptional<T>>(instance);
 }
 
 template<meta::OptionalRepresentable T>
-ComPtr<atd_internal::RuntimeOptional<const T>> runtimeValue(const T& instance)
+ComPtr<cold_internal::RuntimeOptional<const T>> runtimeValue(const T& instance)
 {
-	return cold::com::createInstance<atd_internal::RuntimeOptional<const T>>(instance);
+	return cold::com::createInstance<cold_internal::RuntimeOptional<const T>>(instance);
 }
 
 template<meta::ArrayRepresentable T>
-ComPtr<atd_internal::RuntimeArray<T>> runtimeValue(T& instance)
+ComPtr<cold_internal::RuntimeArray<T>> runtimeValue(T& instance)
 {
-	return cold::com::createInstance<atd_internal::RuntimeArray<T>>(instance);
+	return cold::com::createInstance<cold_internal::RuntimeArray<T>>(instance);
 }
 
 template<meta::ArrayRepresentable T>
-ComPtr<atd_internal::RuntimeArray<const T>> runtimeValue(const T& instance)
+ComPtr<cold_internal::RuntimeArray<const T>> runtimeValue(const T& instance)
 {
-	return cold::com::createInstance<atd_internal::RuntimeArray<const T>>(instance);
+	return cold::com::createInstance<cold_internal::RuntimeArray<const T>>(instance);
 }
 
 template<meta::ObjectRepresentable T>
-ComPtr<atd_internal::RuntimeObject<T>> runtimeValue(T& instance)
+ComPtr<cold_internal::RuntimeObject<T>> runtimeValue(T& instance)
 {
-	return cold::com::createInstance<atd_internal::RuntimeObject<T>>(instance);
+	return cold::com::createInstance<cold_internal::RuntimeObject<T>>(instance);
 }
 
 template<meta::ObjectRepresentable T>
-ComPtr<atd_internal::RuntimeObject<const T>> runtimeValue(const T& instance)
+ComPtr<cold_internal::RuntimeObject<const T>> runtimeValue(const T& instance)
 {
-	return cold::com::createInstance<atd_internal::RuntimeObject<const T>>(instance);
+	return cold::com::createInstance<cold_internal::RuntimeObject<const T>>(instance);
 }
 
 

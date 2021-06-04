@@ -18,7 +18,7 @@
 
 
 using namespace cold::async;
-using namespace cold::atd_literals;
+using namespace cold::cold_literals;
 
 namespace cold {
 
@@ -39,7 +39,7 @@ struct PoolThreadAutoName
 	PoolThreadAutoName()
 	{
 		const unsigned threadNo = threadPoolThreadNo();
-		threading::setCurrentThreadName(format("Pool Thread-%1", threadNo).c_str());
+		threading::setCurrentThreadName(strfmt("Pool Thread-%1", threadNo).c_str());
 	}
 };
 

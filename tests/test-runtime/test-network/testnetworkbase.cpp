@@ -47,10 +47,10 @@ std::vector<std::string> Test_Network_Base::addresses()
 	constexpr std::string_view PipeChannelName = ".\\libcold-test-channel";
 
 	return {
-		format("tcp://:{0}", port),
-		format("ipc://{0}", PipeChannelName),
-		format("ws+tcp://:{0}", port),
-		format("ws+ipc://{0}", PipeChannelName)
+		strfmt("tcp://:{0}", port),
+		strfmt("ipc://{0}", PipeChannelName),
+		strfmt("ws+tcp://:{0}", port),
+		strfmt("ws+ipc://{0}", PipeChannelName)
 	};
 }
 

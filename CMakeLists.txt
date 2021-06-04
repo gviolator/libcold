@@ -5,6 +5,10 @@ project(libcold
 	VERSION 0.0.1
 )
 
+if (NOT CMAKE_BUILD_TYPE)
+	message("CMAKE_BUILD_TYPE set: Debug")
+	set(CMAKE_BUILD_TYPE "Debug")
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -23,6 +27,7 @@ set(LIBCOLD_CMAKE_DIR cmake)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/_dist/x86_64-${CMAKE_BUILD_TYPE}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 
 
 
@@ -56,15 +61,19 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/_dist/x86_64
 # include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 
 
-message ("** Configure [${CMAKE_SYSTEM_NAME}] with [${CMAKE_CXX_COMPILER_ID}]")
+message ("** Configure [${CMAKE_SYSTEM_NAME}] with [${CMAKE_CXX_COMPILER_ID}]: ${CMAKE_BUILD_TYPE}")
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 
 	if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang") #configure clang -------------------------
 
 		message("!! configure using clang")
+		set(LIBCXXROOT )
+		file(TO_CMAKE_PATH $ENV{LIBCXX}x86_64-debug LIBCXXROOT)
+		message("LIBCXX root:" ${LIBCXXROOT})
+
 	#	set(CL_VERSION 19.28.29334)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -Xclang -std=c++2a -Xclang -stdlib=libc++")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Xclang -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -Xclang -std=c++2a -Xclang -stdlib=libc++  -Xclang -nostdinc++ -I${LIBCXXROOT}/include/c++/v1 -D_CRT_SECURE_NO_WARNINGS -D_CRT_STDIO_ISO_WIDE_SPECIFIERS -D_DEBUG -D_LIBCPP_HAS_NO_RANGES")
 	#	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fms-compatibility-version=${CL_VERSION} -Wclang-cl-pch -Xclang -fdiagnostics-absolute-paths -std=c++2a")
 
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") #configure Microsoft VC -------------------------
@@ -97,9 +106,8 @@ else()
 endif()
 
 
-add_subdirectory(src/remoting)
 add_subdirectory(src/runtime)
 
-#if (ENABLE_TESTS)
-add_subdirectory(tests)
-#endif()
+if (COLD_ENABLE_TESTS)
+	add_subdirectory(tests)
+endif()

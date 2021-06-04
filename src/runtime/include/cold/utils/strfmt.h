@@ -69,7 +69,7 @@ inline std::basic_string<C> format__(std::basic_string_view<C> text, const Args&
 /**
 */
 template<typename ... Args>
-inline std::string format(std::string_view text, const Args& ... args)
+inline std::string strfmt(std::string_view text, const Args& ... args)
 {
 	return cold_internal::format__(text, args ...);
 }
@@ -77,7 +77,7 @@ inline std::string format(std::string_view text, const Args& ... args)
 /**
 */
 template<typename ... Args>
-std::wstring format(std::wstring_view text, const Args& ... args)
+std::wstring strfmt(std::wstring_view text, const Args& ... args)
 {
 	return cold_internal::format__(text, args ...);
 }

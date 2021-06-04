@@ -4,17 +4,26 @@ include(autogroup)
 # include(export_includes)
 
 file(GLOB_RECURSE Sources "*.cpp" "*.h")
+file(GLOB_RECURSE PlatformSources "platform/${CMAKE_SYSTEM_NAME}/*.cpp" "platform/${CMAKE_SYSTEM_NAME}/*.h")
+
+list(FILTER Sources EXCLUDE REGEX ".*/platform/.*")
+list(APPEND Sources ${PlatformSources})
+
 auto_group_files("${Sources}" "runtime")
 
 set(TargetName coldruntime)
 add_library(${TargetName} SHARED ${Sources})
 
-# "${CMAKE_SOURCE_DIR}/extras/Visualizers/libcold.natvis"
 
+
+
+
+# "${CMAKE_SOURCE_DIR}/extras/Visualizers/libcold.natvis"
 
 find_package(LibUv REQUIRED)
 # find_package(ICU REQUIRED COMPONENTS uc)
 find_package(RapidJSON REQUIRED)
+find_package(CryptoPP REQUIRED)
 
 
 target_compile_definitions(${TargetName}
@@ -28,7 +37,6 @@ target_compile_definitions(${TargetName}
 
 target_include_directories(${TargetName}
 	PRIVATE
-		${RapidJSON_INCLUDE_DIRS}
 		${CMAKE_CURRENT_SOURCE_DIR}
 		${CMAKE_CURRENT_SOURCE_DIR}/network
 )
@@ -46,17 +54,19 @@ target_link_libraries(${TargetName}
 	PUBLIC
 		LibUv::uv
 		rapidjson
-		# RapidJSON::RapidJSON
-	PRIVATE
-		remoting
+		CryptoPP::CryptoPP
 )
 
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+	target_link_libraries(${TargetName}
+		PRIVATE
+			Rpcrt4
+			Ws2_32
+			Iphlpapi
+	)
+endif()
+
 target_precompile_headers(${TargetName} PRIVATE pch.h)
-
-
-# Rpcrt4
-# Ws2_32
-# Iphlpapi
 
 
 install(TARGETS ${TargetName}

@@ -11,6 +11,6 @@ namespace cold::strings {
 
 [[nodiscard]] std::wstring RUNTIME_EXPORT wstringFromUtf8(std::string_view);
 
-[[nodiscard]] std::wstring RUNTIME_EXPORT wstringFromUtf8Unescape(std::string_view);
+// [[nodiscard]] std::wstring RUNTIME_EXPORT wstringFromUtf8Unescape(std::string_view);
 
 }

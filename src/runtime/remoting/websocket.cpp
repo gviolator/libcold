@@ -234,7 +234,7 @@ MessageFrame MessageReader::getMessageFrame()
 
 			if (m_multiFrameMessage.payload.size() != 0)
 			{
-				throw Excpt(network::NetworkException, format("Expected (ContinuePayload) websocket, but: ({0})", static_cast<int>(header->type)));
+				throw Excpt(network::NetworkException, strfmt("Expected (ContinuePayload) websocket, but: ({0})", static_cast<int>(header->type)));
 			}
 
 			m_multiFrameMessage.type = header->type;
@@ -242,7 +242,7 @@ MessageFrame MessageReader::getMessageFrame()
 		}
 		else if (m_multiFrameMessage.key != header->maskingKey)
 		{
-			throw Excpt(network::NetworkException, format("Invalid masking key for ws frame. expected:({0}) != actual:({1})", m_multiFrameMessage.key, header->maskingKey));
+			throw Excpt(network::NetworkException, strfmt("Invalid masking key for ws frame. expected:({0}) != actual:({1})", m_multiFrameMessage.key, header->maskingKey));
 		}
 
 		std::byte* const framePayloadPtr = m_multiFrameMessage.payload.append(header->payloadLength);
@@ -384,7 +384,7 @@ std::string createSecWebSocketKeyValue()
 
 	encoder->IsolatedInitialize(params);
 
-	CryptoPP::StringSource ss(reinterpret_cast<const byte*>(&bytes), sizeof(bytes), true, encoder);
+	CryptoPP::StringSource ss(reinterpret_cast<const CryptoPP::byte*>(&bytes), sizeof(bytes), true, encoder);
 
 	return key;
 }
@@ -393,9 +393,9 @@ std::string createSecWebSocketKeyValue()
 std::string createSecWebSocketAcceptValue(std::string_view secWebSocketKey)
 {
 	std::string acceptKey = format("%1%2", secWebSocketKey, HandshakeGuid);
-	byte digest[CryptoPP::SHA::DIGESTSIZE];
+	CryptoPP::byte digest[CryptoPP::SHA1::DIGESTSIZE];
 
-	CryptoPP::SHA().CalculateDigest(digest, (const byte*)acceptKey.data(), acceptKey.size());
+	CryptoPP::SHA1().CalculateDigest(digest, (const CryptoPP::byte*)acceptKey.data(), acceptKey.size());
 
 	std::string hash;
 
@@ -478,3 +478,4 @@ void applyMaskingKey(uint32_t maskingKey, std::byte* payloadPtr, size_t payloadS
 }
 
 } // namespace cold::remoting::websocket
+

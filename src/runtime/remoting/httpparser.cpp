@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "cold/diagnostics/logging.h"
 #include "cold/diagnostics/exception.h"
 #include "cold/utils/strings.h"
 #include "cold/remoting/httpparser.h"

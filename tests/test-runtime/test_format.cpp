@@ -1,5 +1,5 @@
 #include "pch.h"
-#include <cold/utils/format.h>
+#include <cold/utils/strfmt.h>
 #include <cold/utils/stringconv.h>
 #include <cold/memory/rtstack.h>
 #include <cold/threading/barrier.h>
@@ -34,7 +34,7 @@ AssertionResult check(const std::initializer_list<std::string_view>& formatStrin
 
 	for (std::string_view formatStr : formatStrings)
 	{
-		const std::string str = format(formatStr, args ...);
+		const std::string str = strfmt(formatStr, args ...);
 		if (expectSame != (str == expectedString))
 		{
 			return expectSame ?
@@ -44,7 +44,7 @@ AssertionResult check(const std::initializer_list<std::string_view>& formatStrin
 		}
 
 		const std::wstring formatWStr = strings::wstringFromUtf8(formatStr);
-		const std::wstring wStr = format(formatWStr, args ...);
+		const std::wstring wStr = strfmt(formatWStr, args ...);
 		if (expectSame != (wStr == expectedWString))
 		{
 			return expectSame ?
@@ -112,9 +112,9 @@ TEST(Test_Common_Format, UseToString)
 
 TEST(Test_Common_Format, SkipPercent)
 {
-	ASSERT_THAT(format("%%1", 777), Eq("%1"));
-	ASSERT_THAT(format("%%%1", 777), Eq("%777"));
-	ASSERT_THAT(format("%%", 777), Eq("%"));
+	ASSERT_THAT(strfmt("%%1", 777), Eq("%1"));
+	ASSERT_THAT(strfmt("%%%1", 777), Eq("%777"));
+	ASSERT_THAT(strfmt("%%", 777), Eq("%"));
 }
 
 TEST(Test_Common_Format, EmptyString)
@@ -122,10 +122,10 @@ TEST(Test_Common_Format, EmptyString)
 	constexpr std::string_view EmptyString = "";
 	constexpr std::wstring_view EmptyWString = L"";
 
-	ASSERT_THAT(format(EmptyString, 1, 2, 3), Eq(EmptyString));
-	ASSERT_THAT(format(EmptyWString, 1, 2, 3), Eq(EmptyWString));
-	ASSERT_THAT(format(EmptyString), Eq(EmptyString));
-	ASSERT_THAT(format(EmptyWString), Eq(EmptyWString));
+	ASSERT_THAT(strfmt(EmptyString, 1, 2, 3), Eq(EmptyString));
+	ASSERT_THAT(strfmt(EmptyWString, 1, 2, 3), Eq(EmptyWString));
+	ASSERT_THAT(strfmt(EmptyString), Eq(EmptyString));
+	ASSERT_THAT(strfmt(EmptyWString), Eq(EmptyWString));
 }
 
 TEST(Test_Common_Format, Pointers)
@@ -143,7 +143,7 @@ TEST(Test_Common_Format, Pointers)
 
 TEST(Test_Common_Format, Benchmark)
 {
-	using namespace cold::atd_literals;
+	using namespace cold::cold_literals;
 
 	constexpr size_t ThreadsCount = 5;
 	
@@ -165,7 +165,7 @@ TEST(Test_Common_Format, Benchmark)
 				barrier.enter();
 				for (size_t i = 0; i < iterCount; ++i)
 				{
-					[[maybe_unused]] auto str = cold::format("{0}{1}{2}: {3}, {4} Long long {5} string", "100ok200", 100, Formatable{}, i);
+					[[maybe_unused]] auto str = cold::strfmt("{0}{1}{2}: {3}, {4} Long long {5} string", "100ok200", 100, Formatable{}, i);
 				}
 			});
 		}

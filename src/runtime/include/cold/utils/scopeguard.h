@@ -5,7 +5,7 @@
 #include <type_traits>
 
 
-namespace cold::atd_internal {
+namespace cold::cold_internal {
 
 
 template<typename F>
@@ -83,12 +83,12 @@ struct ExprBlock
 
 
 #define SCOPE_Fail\
-	cold::atd_internal::ScopeGuard_OnFail ANONYMOUS_VARIABLE_NAME(onScopeFailure__) = [&]() noexcept
+	cold::cold_internal::ScopeGuard_OnFail ANONYMOUS_VARIABLE_NAME(onScopeFailure__) = [&]() noexcept
 
 #define SCOPE_Success\
-	cold::atd_internal::ScopeGuard_OnSuccess ANONYMOUS_VARIABLE_NAME(onScopeSuccess__) = [&]
+	cold::cold_internal::ScopeGuard_OnSuccess ANONYMOUS_VARIABLE_NAME(onScopeSuccess__) = [&]
 
 #define SCOPE_Leave\
-	cold::atd_internal::ScopeGuard_OnLeave ANONYMOUS_VARIABLE_NAME(onScopeLeave__) = [&]
+	cold::cold_internal::ScopeGuard_OnLeave ANONYMOUS_VARIABLE_NAME(onScopeLeave__) = [&]
 
-#define EXPR_Block cold::atd_internal::ExprBlock{} + [&]()
+#define EXPR_Block cold::cold_internal::ExprBlock{} + [&]()

@@ -70,14 +70,14 @@ inline uv_handle_t* asUvHandle(T* handle)
 /**
 */
 template<typename T = uv_handle_t>
-class UvHandle : public atd_internal::UvHandleBase
+class UvHandle : public cold_internal::UvHandleBase
 {
 	template<typename U>
 	static constexpr bool CrossAssignable = !std::is_same_v<U,T> && (AnyOf<T, uv_handle_t, uv_stream_t> || AnyOf<U, uv_handle_t, uv_stream_t>);
 
 public:
 
-	UvHandle(): atd_internal::UvHandleBase(uvHandleType(typeid(T)))
+	UvHandle(): cold_internal::UvHandleBase(uvHandleType(typeid(T)))
 	{}
 
 	UvHandle(UvHandle&& other)

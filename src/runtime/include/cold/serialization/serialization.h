@@ -122,7 +122,7 @@ class RequiredFieldMissedExceptionImpl final : public ExceptionImpl<serializatio
 public:
 
 	RequiredFieldMissedExceptionImpl(const diagnostics::SourceInfo& sourceInfo_, std::string_view typeName_, std::string_view fieldName_)
-		: ExceptionBase(sourceInfo_, format(L"Required field ({0}.{1}) missed", typeName_, fieldName_))
+		: ExceptionBase(sourceInfo_, strfmt(L"Required field ({0}.{1}) missed", typeName_, fieldName_))
 		, m_typeName(typeName_)
 		, m_fieldName(fieldName_)
 	{}
@@ -150,7 +150,7 @@ class InvalidTypeExceptionImpl  : public ExceptionImpl<serialization::InvalidTyp
 public:
 
 	InvalidTypeExceptionImpl(const diagnostics::SourceInfo& sourceInfo_, std::string_view expectedTypeName_, std::string_view actualTypeName_)
-		: ExceptionBase(sourceInfo_, format(L"Expected type(category):({0}), but:({1})", expectedTypeName_, actualTypeName_))
+		: ExceptionBase(sourceInfo_, strfmt(L"Expected type(category):({0}), but:({1})", expectedTypeName_, actualTypeName_))
 		, m_expectedTypeName(expectedTypeName_)
 		, m_actualTypeName(actualTypeName_)
 	{}

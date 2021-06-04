@@ -12,4 +12,5 @@
 #endif
 
 
-
+#define WFILE CONCATENATE(L, __FILE__)
+#define WFUNCTION CONCATENATE(L, __FUNCTION__)

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "cold/utils/format.h"
+#include "cold/utils/strfmt.h"
 #include "cold/utils/stringconv.h"
 #include "cold/memory/rtstack.h"
 
@@ -10,7 +10,7 @@
 #define FORMAT_ENABLE_QT_STYLE
 
 
-namespace cold::atd_internal {
+namespace cold::cold_internal {
 
 
 namespace {
@@ -336,7 +336,7 @@ std::wstring formatImpl__(std::wstring_view text, const FormatArgumentEntry__<wc
 }
 
 
-} // namespace cold::atd_internal
+} // namespace cold::cold_internal
 
 
 //-----------------------------------------------------------------------------

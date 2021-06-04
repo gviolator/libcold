@@ -11,8 +11,8 @@ std::string makePipeFilePath(std::string_view host, std::string_view service)
 	std::string pipeFilePath;
 
 	pipeFilePath = host.empty() ?
-		format("\\\\.\\pipe\\%1", service):
-		format("\\\\%1\\pipe\\%2", host, service);
+		strfmt("\\\\.\\pipe\\%1", service):
+		strfmt("\\\\%1\\pipe\\%2", host, service);
 
 	return pipeFilePath;
 }

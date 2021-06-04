@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "runtimecheckinternal.h"
-#include "cold/utils/format.h"
+#include "cold/utils/strfmt.h"
 
 
 namespace cold::diagnostics {
@@ -43,7 +43,7 @@ void RuntimeCheckInternal::raiseFailure(SourceInfo source, const wchar_t* module
 
 	const wchar_t* unknown = L"unknown";
 
-	const auto failureMessage = format(L"\nASSERTION FAILURE: {0}\n\nCallee:({1}) in module:({2})\n{3}({4}):{5}\n",
+	const auto failureMessage = strfmt(L"\nASSERTION FAILURE: {0}\n\nCallee:({1}) in module:({2})\n{3}({4}):{5}\n",
 		expression,
 		source.functionName,
 		moduleName ? unknown : moduleName,

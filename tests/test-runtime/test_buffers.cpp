@@ -34,7 +34,7 @@ static testing::AssertionResult checkBufferDefaultContent(const T& buffer, size_
 
 		if (bufferValue != expectedValue)
 		{
-			return testing::AssertionFailure() << format("Value mismatch at position [%1]. Expected [%2 , %3'], but [%4, '%5']", i, static_cast<int>(expectedValue), expectedValue, static_cast<int>(bufferValue), bufferValue);
+			return testing::AssertionFailure() << strfmt("Value mismatch at position [%1]. Expected [%2 , %3'], but [%4, '%5']", i, static_cast<int>(expectedValue), expectedValue, static_cast<int>(bufferValue), bufferValue);
 		}
 	}
 

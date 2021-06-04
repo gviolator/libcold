@@ -8,7 +8,7 @@
 
 
 using namespace cold;
-using namespace cold::atd_literals;
+using namespace cold::cold_literals;
 
 RuntimeScopeGuard::RuntimeScopeGuard()
 {

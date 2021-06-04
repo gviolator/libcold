@@ -91,11 +91,11 @@ std::string uvErrorMessage(int code, std::string_view customMessage) noexcept
 	const char* const errName = uv_err_name(code);
 	if (!customMessage.empty())
 	{
-		return format("%1:%2", errName, customMessage);
+		return strfmt("%1:%2", errName, customMessage);
 	}
 
 	const char* const errStr = uv_strerror(code);
-	return format("%1:%2", errName, errStr);
+	return strfmt("%1:%2", errName, errStr);
 }
 
 uv_handle_type uvHandleType(const std::type_info& type)

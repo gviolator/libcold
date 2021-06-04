@@ -18,6 +18,8 @@
 #include <mutex>
 #include <numeric>
 #include <optional>
+#include <random>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <type_traits>

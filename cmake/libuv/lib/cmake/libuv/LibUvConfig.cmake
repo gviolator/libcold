@@ -12,9 +12,20 @@ add_library(LibUv::uv STATIC IMPORTED)
 add_library(LibUv::uv_static STATIC IMPORTED)
 
 set (Arch x86_64)
+
+# if (CMAKE_GENERATOR MATCHES "Visual Studio")
+# 	message ("IM VISUAL")
+# else()
+# 	message ("NOT VISUAL")
+# endif()
+
+
 set (_IMPORT_PREFIX ${_IMPORT_PREFIX}/3rdparty/_dist/${Arch}-${CMAKE_BUILD_TYPE}/libuv)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+
+
+
 
 	set_target_properties(LibUv::uv PROPERTIES
 		INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"

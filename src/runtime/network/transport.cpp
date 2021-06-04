@@ -112,7 +112,7 @@ Task<Stream::Ptr> Client::connect(std::string addressString, Expiration expirati
 	}
 	while (!expiration.isExpired());
 
-	std::wstring message = format(L"Connection:({0}) was not established during specified timeout or cancelled.", address);
+	std::wstring message = strfmt(L"Connection:({0}) was not established during specified timeout or cancelled.", address);
 	throw Excpt(NetworkException, std::move(message));
 	
 	co_return Stream::Ptr{};

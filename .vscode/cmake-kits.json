@@ -8,6 +8,48 @@
     "preferredGenerator": {
       "name": "Ninja"
     },
+    "keep": true,
+    "environmentVariables": {
+
+    }
+  },
+
+  {
+    "name": "Windows: clang",
+    "environmentSetupScript": "${workspaceFolder}\\buildscripts\\windows\\setup-llvm.cmd",
+    "preferredGenerator": {
+      "name": "Ninja"
+    },
+    "compilers": {
+      "C": "clang",
+      "CXX": "clang++"
+    },
+    "keep": true,
+    "cmakeSettings": {
+      "CMAKE_INCLUDE_PATH": "${env:LIBCXX}/x86_64-debug/include"
+    }
+  },
+
+  {
+    "name": "Windows: cl + ninja",
+    "environmentSetupScript": "${workspaceFolder}\\buildscripts\\windows\\env_vc142x64.cmd",
+    "preferredGenerator": {
+      "name": "Ninja"
+    },
+    "compilers": {
+      "CXX": "cl.exe",
+      "C": "cl.exe"
+    },
     "keep": true
-  }
+  },
+
+  {
+    "name": "Windows: Visual Studio",
+    "environmentSetupScript": "${workspaceFolder}\\buildscripts\\windows\\env_vc142x64.cmd",
+    "visualStudioArchitecture": "x64",
+    "preferredGenerator": {
+      "name": "Visual Studio 16 2019"
+    },
+    "keep": true
+  }  
 ]

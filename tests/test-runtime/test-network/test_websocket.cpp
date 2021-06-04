@@ -127,14 +127,16 @@ TEST_P(Network_WebSocketHeader, InitializeAndParseFrameHeader)
 	{
 		FrameHeaderBytes bytes;
 
-		auto [headerSize, originalMaskingKey] = initializeFrameHeaderBytes(bytes, ExpectedFrameType, finalized, masked(), expectedPalyloadLength());
+		const uint64_t payloadLength = this->expectedPalyloadLength();
+
+		auto [headerSize, originalMaskingKey] = initializeFrameHeaderBytes(bytes, ExpectedFrameType, this->masked(), payloadLength, finalized );
 
 		auto header = parseFrameHeader(bytes, headerSize);
 
 		ASSERT_TRUE(header);
 	
 		ASSERT_THAT(header->headerSize, Eq(headerSize));
-		ASSERT_THAT(header->payloadLength, Eq(expectedPalyloadLength()));
+		ASSERT_THAT(header->payloadLength, Eq(payloadLength));
 		ASSERT_THAT(header->type, Eq(ExpectedFrameType));
 		ASSERT_THAT(header->isFinal, Eq(finalized));
 

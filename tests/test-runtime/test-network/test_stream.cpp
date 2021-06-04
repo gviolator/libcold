@@ -6,7 +6,7 @@
 #include <csignal> // set::signal lives here
 
 using namespace cold;
-using namespace cold::atd_literals;
+using namespace cold::cold_literals;
 using namespace cold::async;
 using namespace cold::network;
 using namespace testing;
@@ -65,7 +65,7 @@ struct StreamTestParameter
 	template<typename T>
 	friend std::ostream& operator << (std::ostream& outStream, const StreamTestParameter& params)
 	{
-		outStream << format("{0}: dataSize({1})", params.address, params.blocksCount);
+		outStream << strfmt("{0}: dataSize({1})", params.address, params.blocksCount);
 		return outStream;
 	}
 

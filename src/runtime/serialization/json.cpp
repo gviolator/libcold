@@ -31,7 +31,7 @@ Result<> parse(JsonDocument& document, ReaderStream& stream) {
 
 	default:
 	{
-		return MAKE_Excpt(SerializationException, format(L"Json error:(%1)", error));
+		return MAKE_Excpt(SerializationException, strfmt(L"Json error:(%1)", error));
 	}
 	}
 

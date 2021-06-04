@@ -130,7 +130,7 @@ TEST(Test_Task, Resolve)
 
 	const auto getExceptionMessage = [](size_t index) -> std::string
 	{
-		return format("Exception: %1", index);
+		return strfmt("Exception: %1", index);
 	};
 
 

@@ -27,7 +27,7 @@ TEST(Test_SocketAddress, ParseTcp)
 {
 	const auto verify = [](std::string_view host, std::string_view service)
 	{
-		const auto address = format("{0}:{1}", host, service);
+		const auto address = strfmt("{0}:{1}", host, service);
 		auto [resHost, resService] = SocketAddress::parseTcpAddress(address);
 
 		EXPECT_THAT(resHost, Eq(host));
@@ -45,7 +45,7 @@ TEST(Test_SocketAddress, ParseIpc)
 {
 	const auto verify = [](std::string_view host, std::string_view service)
 	{
-		const auto address = format("{0}\\{1}", host, service);
+		const auto address = strfmt("{0}\\{1}", host, service);
 		auto [resHost, resService] = SocketAddress::parseIpcAddress(address);
 
 		if (host != ".")

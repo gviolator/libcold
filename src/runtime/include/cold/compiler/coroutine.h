@@ -1,9 +1,9 @@
 #pragma once
 
-#if __has_include (<coroutine>)
+
+#if defined(_MSC_VER)
 
 #include <coroutine>
-
 #define STD_CORO std
 
 #elif __has_include (<experimental/coroutine>)
@@ -23,5 +23,9 @@ using suspend_always = ::std::experimental::suspend_always;
 
 }
 
+#else
+
+#error Do not known how to using coroutine with that compiler
 
 #endif
+

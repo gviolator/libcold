@@ -1,5 +1,6 @@
 #pragma once
 #include <cold/diagnostics/runtimecheck.h>
+#include <cold/utils/preprocessor.h>
 #include <exception>
 
 
@@ -25,7 +26,7 @@ struct NoExceptGuard
 		}
 		catch (const std::exception& exception)
 		{
-			auto message = format(L"{0}", exception.what());
+			auto message = strfmt(L"{0}", exception.what());
 			RuntimeCheck::raiseFailure(SourceInfo{guard.func, guard.source, guard.line}, nullptr, L"NOEXCEPT GUARD", message);
 		}
 		catch (...)
@@ -37,11 +38,11 @@ struct NoExceptGuard
 
 }
 
-#define NOEXCEPT_Guard cold::internal::NoExceptGuard{__FUNCTIONW__, __FILEW__, __LINE__} + [&]()
+#define NOEXCEPT_Guard cold::internal::NoExceptGuard{WFUNCTION, WFILE, __LINE__} + [&]()
 
 
 #if !defined(NDEBUG)
-#define DEBUG_NOEXCEPT_Guard cold::internal::NoExceptGuard{__FUNCTIONW__, __FILEW__, __LINE__} + [&]()
+#define DEBUG_NOEXCEPT_Guard cold::internal::NoExceptGuard{WFUNCTION, WFILE, __LINE__} + [&]()
 #else
 #define DEBUG_NOEXCEPT_Guard
 #endif

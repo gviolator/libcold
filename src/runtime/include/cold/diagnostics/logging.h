@@ -87,8 +87,6 @@ struct LogContext
 	SourceInfo source;
 	LogTags tags;
 
-	LogContext() = default;
-
 	LogContext(SourceInfo source_): source(source_)
 	{}
 

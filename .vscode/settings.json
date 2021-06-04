@@ -1,9 +1,13 @@
 {
-	"cmake.buildDirectory": "${workspaceFolder}/.build/default.1",
+	"cmake.buildDirectory": "${workspaceFolder}/.build/default-${buildType}",
 	"cmake.copyCompileCommands": "${workspaceFolder}/.build/compile_commands.json",
-
+	"cmake.configureSettings": {
+		"CMAKE_CONFIGURATION_TYPES": "${buildType}",
+		"COLD_ENABLE_TESTS": "TRUE"
+	},
+	"C_Cpp.intelliSenseEngine": "Disabled",
 	"clangd.arguments": [
 		"--compile-commands-dir", "${workspaceFolder}/.build/"
 	]
-
+	
 }

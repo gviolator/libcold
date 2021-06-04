@@ -73,13 +73,15 @@ public:
 
 	const wchar_t* diagMessage() const override
 	{
-		if (!m_sourceInfo) {
+		if (!m_sourceInfo)
+		{
 			return m_message.c_str();
 		}
 
-		if (!m_diagMessage) {
+		if (!m_diagMessage)
+		{
 			const unsigned line = m_sourceInfo.line ? *m_sourceInfo.line : 0;
-			m_diagMessage = format(L"{0}({1}):{2}", m_sourceInfo.filePath, line, m_message);
+			m_diagMessage = strfmt(L"{0}({1}):{2}", m_sourceInfo.filePath, line, m_message);
 		}
 
 		return m_diagMessage->c_str();

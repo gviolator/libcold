@@ -5,13 +5,13 @@
 #include <optional>
 
 
-//#define ATD_THREADING_EVENT_FORCE_STDLIB
+//#define COLD_THREADING_EVENT_FORCE_STDLIB
 
 
-#if defined(ATD_THREADING_EVENT_FORCE_STDLIB) || !defined(_WIN32)
-#define ATD_THREADING_EVENT_STDLIB
+#if defined(COLD_THREADING_EVENT_FORCE_STDLIB) || !defined(_WIN32)
+#define COLD_THREADING_EVENT_STDLIB
 #elif defined(_WIN32)
-#define ATD_THREADING_EVENT_WINAPI
+#define COLD_THREADING_EVENT_WINAPI
 #endif
 
 
@@ -42,7 +42,7 @@ public:
 
 	Event(ResetMode mode = ResetMode::Auto, bool signaled = false);
 
-#ifdef ATD_THREADING_EVENT_WINAPI
+#ifdef COLD_THREADING_EVENT_WINAPI
 	~Event();
 #endif
 
@@ -90,11 +90,11 @@ protected:
 
 	ResetMode m_mode;
 
-#ifdef ATD_THREADING_EVENT_STDLIB
+#ifdef COLD_THREADING_EVENT_STDLIB
 	std::mutex m_mutex;
 	std::condition_variable m_signal;
 	bool m_state;
-#elif defined (ATD_THREADING_EVENT_WINAPI)
+#elif defined (COLD_THREADING_EVENT_WINAPI)
 	void* const m_event;
 #endif
 };
