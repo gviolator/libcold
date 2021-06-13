@@ -39,7 +39,7 @@ TEST(Common_Uid, Stringize) {
 
 	const auto wstr = toWString(uid1);
 	ASSERT_FALSE(wstr.empty());
-	ASSERT_THAT(str, Eq(strings::toUtf8(wstr)));
+	ASSERT_THAT(str, Eq(wstringToUtf8(wstr)));
 }
 
 

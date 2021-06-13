@@ -345,13 +345,13 @@ namespace cold::formatters {
 
 void formatValue(std::basic_ostream<char>& stream, std::wstring_view wstr)
 {
-	const std::string bytes =strings::toUtf8(wstr);
+	const std::string bytes = cold::wstringToUtf8(wstr);
 	stream << bytes;
 }
 
 void formatValue(std::basic_ostream<wchar_t>& stream, std::string_view str)
 {
-	const std::wstring wstr = strings::wstringFromUtf8(str);
+	const std::wstring wstr = cold::utf8ToWString(str);
 	stream << wstr;
 }
 

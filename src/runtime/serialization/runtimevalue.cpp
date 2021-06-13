@@ -9,7 +9,7 @@
 namespace cold {
 
 namespace {
-
+/*
 template<typename U, typename T>
 decltype(auto) cast_(T& src_) 
 {
@@ -65,33 +65,92 @@ Result<> visitNumericPrimitiveValue(RT& value, F f)
 	RUNTIME_FAILURE("Unexpected code path")
 	return Excpt_("Unexpected code path");
 }
+*/
 
-
-Result<> assignPrimitiveValue(ComPtr<RuntimePrimitiveValue> dst, const RuntimeValue::Ptr src)
+Result<> assignPrimitiveValue(RuntimePrimitiveValue& dst, const RuntimePrimitiveValue& src)
 {
-	const RuntimePrimitiveValue* srcPtr = src->as<const RuntimePrimitiveValue*>();
-	if (!srcPtr)
+	if (RuntimeBooleanValue* const dstBool = dst.as<RuntimeBooleanValue*>(); dstBool)
 	{
-		return Excpt_("Value category mismatch.");
+		if (auto srcBool = src.as<const RuntimeBooleanValue*>(); srcBool)
+		{
+			dstBool->set(srcBool->get());
+			return success;
+		}
+
+		return Excpt_("Expected Boolean");
 	}
 
-	const RuntimePrimitiveValue& srcRtv = *srcPtr;
-
-	if (dst->is<RuntimeBooleanValue>() || srcPtr->is<RuntimeBooleanValue>())
+	if (src.is<RuntimeBooleanValue>())
 	{
-		if (!dst->is<RuntimeBooleanValue>() || !srcPtr->is<RuntimeBooleanValue>())
+		return Excpt_("Boolean can be assigned only to boolean");
+	}
+
+	if (RuntimeIntegerValue* const dstInt = dst.as<RuntimeIntegerValue*>(); dstInt)
+	{
+		if (const RuntimeIntegerValue* const srcInt = src.as<const RuntimeIntegerValue*>(); srcInt)
 		{
-			return Excpt_("Boolean is assignable only to boolean");
+			if (dstInt->isSigned())
+			{
+				dstInt->setInt64(srcInt->getInt64());
+			}
+			else
+			{
+				dstInt->setUint64(srcInt->getUint64());
+			}
+		}
+		else if (const RuntimeFloatValue* const srcFloat = src.as<const RuntimeFloatValue*>(); srcFloat)
+		{
+			const auto iValue = static_cast<int64_t>(std::floor(srcFloat->getSingle()));
+
+			if (dstInt->isSigned())
+			{
+				dstInt->setInt64(iValue);
+			}
+			else
+			{
+				dstInt->setUint64(iValue);
+			}
+		}
+		else
+		{
+			return Excpt_("Can t assgin value to integer");
 		}
 
 		return success;
 	}
 
-	const auto isString = [](const RuntimePrimitiveValue& val) 
+	if (RuntimeFloatValue* const dstFloat = dst.as<RuntimeFloatValue*>(); dstFloat)
 	{
-		return val.is<RuntimeStringValue>() || val.is<RuntimeWStringValue>();
-	};
+		if (const RuntimeFloatValue* const srcFloat = src.as<const RuntimeFloatValue*>(); srcFloat)
+		{
+			dstFloat->setDouble(srcFloat->getDouble());
+		}
+		else if (const RuntimeIntegerValue* const srcInt = src.as<const RuntimeIntegerValue*>(); srcInt)
+		{
+			if (dstFloat->bits() == sizeof(double))
+			{
+				dstFloat->setDouble(static_cast<double>(srcInt->getInt64()));
+			}
+			else
+			{
+				dstFloat->setSingle(static_cast<float>(srcInt->getInt64()));
+			}
+		}
+		else
+		{
+			return Excpt_("Can t assgin value to float");
+		}
 
+		return success;
+	}
+
+
+
+	//const auto isString = [](const RuntimePrimitiveValue& val) 
+	//{
+	//	return val.is<RuntimeStringValue>() || val.is<RuntimeWStringValue>();
+	//};
+	/*
 	if (isString(*dst) || isString(*srcPtr))
 	{
 		if (!isString(*dst) || !isString(*srcPtr))
@@ -123,35 +182,33 @@ Result<> assignPrimitiveValue(ComPtr<RuntimePrimitiveValue> dst, const RuntimeVa
 
 		const RuntimeWStringValue& srcWStr = srcPtr->as<const RuntimeWStringValue&>();
 		return dstWStr.set(srcWStr.get());
-	}
+	}*/
 
-	return visitNumericPrimitiveValue(dst, [&]<typename T>(TypedRuntimePrimitiveValue<T>& dstRtValue) -> Result<> {
-		return visitNumericPrimitiveValue(srcPtr, [&]<typename U>(const TypedRuntimePrimitiveValue<U>& srcRtValue) -> Result<>{
-			const auto srcValue = *srcRtValue;
-			return dstRtValue.set(srcValue);
-		});
-	});
+	//return visitNumericPrimitiveValue(dst, [&]<typename T>(TypedRuntimePrimitiveValue<T>& dstRtValue) -> Result<> {
+	//	return visitNumericPrimitiveValue(srcPtr, [&]<typename U>(const TypedRuntimePrimitiveValue<U>& srcRtValue) -> Result<>{
+	//		const auto srcValue = *srcRtValue;
+	//		return dstRtValue.set(srcValue);
+	//	});
+	//});
+	return success;
 }
 
-Result<> assignArrayValue(ComPtr<RuntimeArrayValue> dstArray, const ComPtr<RuntimeValue> srcValue) 
+Result<> assignArray(RuntimeArray& arr, const RuntimeReadonlyCollection& collection) 
 {
-	if (!srcValue->is<RuntimeArrayValue>()) 
+	const size_t size = collection.size();
+	arr.clear();
+	if (size == 0)
 	{
-		return Excpt_("Expected array value");
+		return success;
 	}
 
-	const auto& srcCollection = srcValue->as<const RuntimeReadonlyCollection&>();
-	const size_t srcSize = srcCollection.size();
-	dstArray->clear(srcSize);
+	arr.reserve(size);
 
-	for (size_t i = 0; i < srcSize; ++i) {
-		dstArray->pushBack();
-		RuntimeValue::Ptr dstElement = dstArray->back();
-		//RuntimeValue& dstElement = dstArray.emplaceBack();
-		const RuntimeValue::Ptr srcElement = srcCollection[i];
-
-		if (auto res = RuntimeValue::assign(dstElement, srcElement); !res) {
-			return res;
+	for (size_t i = 0; i < size; ++i)
+	{
+		if (auto pushResult = arr.push(collection[i]); !pushResult)
+		{
+			return pushResult;
 		}
 	}
 	
@@ -159,20 +216,50 @@ Result<> assignArrayValue(ComPtr<RuntimeArrayValue> dstArray, const ComPtr<Runti
 }
 
 
+Result<> assignDictionary(RuntimeDictionary& dict, const RuntimeReadonlyCollection& src)
+{
+	return Excpt_("assignDictionary not implemented");
+}
+
+
+Result<> assignObject(RuntimeObject& obj, const RuntimeReadonlyDictionary& dict)
+{
+	for (size_t i = 0, size = obj.size(); i < size; ++i)
+	{
+		const auto [key, fieldValue] = obj[i];
+
+		if (const RuntimeValue::Ptr value = dict[key]; value)
+		{
+			if (auto assignResult = RuntimeValue::assign(fieldValue, value); !assignResult)
+			{
+				return assignResult;
+			}
+		}
+		else
+		{
+
+		}
+	}
+
+	return success;
+}
+
 } // namespace
 
 
-Result<> RuntimeValue::assign(RuntimeValue::Ptr dst, const RuntimeValue::Ptr src)
+Result<> RuntimeValue::assign(RuntimeValue::Ptr dst, RuntimeValue::Ptr src)
 {
+	DEBUG_CHECK(dst)
+	DEBUG_CHECK(src)
+
 	DEBUG_CHECK(dst->isMutable())
 
 	if (src->is<RuntimeOptionalValue>()) 
 	{
-		auto& srcOpt = src->as<RuntimeOptionalValue&>();
-
+		auto& srcOpt = src->as<const RuntimeOptionalValue&>();
 		if (srcOpt.hasValue()) 
 		{
-			return RuntimeValue::assign(dst, srcOpt.value());
+			//return RuntimeValue::assign(dst, srcOpt.value());
 		}
 		
 		if (!dst->is<RuntimeOptionalValue>()) 
@@ -191,21 +278,43 @@ Result<> RuntimeValue::assign(RuntimeValue::Ptr dst, const RuntimeValue::Ptr src
 	{
 		auto& dstOpt = dst->as<RuntimeOptionalValue&>();
 		// Can this code be refactored to takes into account, that next line can be failed ?!
-		return RuntimeValue::assign(dstOpt.emplace(), src);
+		//return RuntimeValue::assign(dstOpt.emplace(), src);
 	}
 
-	if (src->is<RuntimePrimitiveValue>()) 
+	if (RuntimePrimitiveValue* const dstValue = dst->as<RuntimePrimitiveValue*>(); dstValue)
 	{
-		//ComPtr<RuntimePrimitiveValue> value = cold::com::createInstance<RuntimePrimitive>(src);
-		return assignPrimitiveValue(dst, src);
+		auto srcValue = src->as<const RuntimePrimitiveValue*>();
+		return assignPrimitiveValue(*dstValue, *srcValue);
 	}
 	
-	if (dst->is<RuntimeArrayValue>()) 
+	if (RuntimeArray* const arr = dst->as<RuntimeArray*>(); arr)
 	{
-		return assignArrayValue(dst, src);
+		const RuntimeReadonlyCollection* const collection = src->as<const RuntimeReadonlyCollection*>();
+		if (!collection)
+		{
+			return Excpt_("Collection required");
+		}
+
+		return assignArray(*arr, *collection);
 	}
 
-	return success;
+	if (RuntimeDictionary* const dict = dst->as<RuntimeDictionary*>(); dict)
+	{
+		
+	}
+
+	if (RuntimeObject* const obj = dst->as<RuntimeObject*>(); obj)
+	{
+		const RuntimeReadonlyDictionary* const dict = src->as<const RuntimeReadonlyDictionary*>();
+		if (!dict)
+		{
+			return Excpt_("Collection required");
+		}
+
+		return assignObject(*obj, *dict);
+	}
+
+	return Excpt_("Do not known how to assign runtime value");
 }
 
 }

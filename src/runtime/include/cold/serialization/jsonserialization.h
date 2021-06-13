@@ -1,5 +1,7 @@
 #pragma once
 #include <cold/runtime/runtimeexport.h>
+#include <cold/utils/result.h>
+#include <cold/serialization/runtimevalue.h>
 #include <cold/serialization/serialization.h>
 
 
@@ -12,17 +14,24 @@ struct JsonSettings
 	bool pretty = false;
 };
 
-/**
-*/
-struct INTERFACE_API IJsonSerialization : ISerialization
-{
-	DECLARE_CLASS_BASE(ISerialization)
+RUNTIME_EXPORT Result<> jsonWrite(io::Writer&, const RuntimeValue::Ptr&, JsonSettings);
 
-	virtual Result<> jsonSerialize(io::Writer& writer, const RuntimeValue::Ptr, const JsonSettings&) const = 0;
-};
+RUNTIME_EXPORT Result<RuntimeValue::Ptr> jsonParse(io::Reader&);
+
+RUNTIME_EXPORT Result<> jsonDeserialize(io::Reader&, RuntimeValue::Ptr);
+
 
 /**
 */
-RUNTIME_EXPORT const IJsonSerialization& jsonSerialization();
+//struct INTERFACE_API IJsonSerialization : ISerialization
+//{
+//	DECLARE_CLASS_BASE(ISerialization)
+//
+//	virtual Result<> jsonSerialize(io::Writer& writer, const RuntimeValue::Ptr, const JsonSettings&) const = 0;
+//};
+
+/**
+*/
+// RUNTIME_EXPORT const IJsonSerialization& jsonSerialization();
 
 }

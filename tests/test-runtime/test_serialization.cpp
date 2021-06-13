@@ -6,7 +6,7 @@
 #include <cold/memory/bytesbuffer.h>
 
 #include <cold/serialization/jsonserialization.h>
-#include <cold/serialization/msgpackserialization.h>
+//#include <cold/serialization/msgpackserialization.h>
 #include <cold/serialization/runtimevaluebuilder.h>
 #include <cold/serialization/serialization.h>
 #include <cold/com/comclass.h>
@@ -16,7 +16,7 @@ using namespace cold;
 using namespace cold::serialization;
 using namespace testing;
 
-#if 0
+
 
 class MyStringWriter final : public io::Writer
 {
@@ -67,6 +67,10 @@ private:
 };
 
 
+
+
+
+
 class MyStringReader : public io::Reader
 {
 	using Ch = char;
@@ -112,10 +116,14 @@ private:
 	size_t m_offset = 0;
 };
 
+#if 0
+
 class Test_Serialization : public testing::Test
 {
 
 };
+
+
 
 
 TEST_F(Test_Serialization, Test1) {
@@ -158,3 +166,146 @@ TEST_F(Test_Serialization, Test1) {
 }
 
 #endif
+
+void dumpVal(RuntimeValue::Ptr value)
+{
+	std::cout << "\nMutable? = " << value->isMutable() << std::endl;
+	std::cout << "Optional? = " << value->is<RuntimeOptionalValue>() << std::endl;
+	std::cout << "Integer? = " << value->is<RuntimeIntegerValue>() << std::endl;
+	std::cout << "Float? = " << value->is<RuntimeFloatValue>() << std::endl;
+	std::cout << "String? = " << value->is<RuntimeStringValue>() << std::endl;
+	std::cout << "Array? = " << value->is<RuntimeReadonlyCollection>() << std::endl;
+	std::cout << "Dictionary? = " << value->is<RuntimeReadonlyDictionary>() << std::endl;
+	std::cout << "Object? = " << value->is<RuntimeObject>() << std::endl;
+	
+
+	if (auto single = value->as<RuntimeFloatValue*>(); single)
+	{
+		std::cout << "  [float] = " << single->getSingle() << std::endl;
+	}
+	else if (auto integer = value->as<RuntimeIntegerValue*>(); integer)
+	{
+		std::cout << "  [integer] = " << integer->getInt64() << std::endl;
+	}
+	else if (auto arr = value->as<RuntimeReadonlyCollection*>(); arr)
+	{
+		std::cout << "  [array].size = " << arr->size() << std::endl;
+		std::cout << "  [array].elements:\n";
+		for (size_t i = 0; i < arr->size(); ++i)
+		{
+			std::cout << "\n";
+			dumpVal((*arr)[i]);
+		}
+	}
+	else if (auto dict = value->as<RuntimeReadonlyDictionary*>(); dict)
+	{
+		std::cout << "  [dict].size = " << dict->size() << std::endl;
+		std::cout << "  [dict].values:\n" ;
+		for (size_t i = 0; i < dict->size(); ++i)
+		{
+			const auto [key, value] = (*dict)[i];
+			std::cout << cold::strfmt("    [dict].[{0}]:\n", key);
+			dumpVal(value);
+		}
+	}
+}
+
+
+
+struct MyClass
+{
+	unsigned uvalue = 11;
+	int ivalue = -4;
+	double dvalue = 77.07;
+
+	CLASS_INFO(
+		CLASS_FIELDS(
+			CLASS_FIELD(uvalue),
+			CLASS_FIELD(ivalue),
+			CLASS_FIELD(dvalue)
+		)
+	)
+};
+
+
+TEST(Test_Serialization, Test1)
+{
+	//MyStringReader reader("{ \"values\": [778, 22, 5.2, [1,2,3,4]], \"name\": 62 }");
+	MyStringReader reader("{ \"uvalue\": 99, \"ivalue\": -101, \"dvalue\":  60.0}");
+
+
+	auto res = cold::serialization::jsonParse(reader);
+
+	auto value = std::move(*res);
+	std::cout << "Root:\n";
+	// dumpVal(value);
+
+	std::cout << "Root22: ------------------------\n";
+	//dumpVal(value);
+
+	
+	std::vector<int> values = {11, 22, 333, 444};
+	auto rv = cold::runtimeValue(values);
+
+	//dumpVal(rv);
+
+	MyClass instance;
+
+	auto res1 = RuntimeValue::assign(cold::runtimeValue(instance), value);
+	std::cout << "ok\n";
+
+	//auto obj = cold::runtimeValue(instance);
+	// dumpVal(obj);
+
+	
+	//int i1 = 100;
+	//auto rv = cold::runtimeValue(i1);
+
+	//dumpVal(rv);
+
+	////int i1 = 100;
+	//auto rv2 = cold::runtimeValue(90.5);
+
+	//dumpVal(rv2);
+
+	// const auto ii = value->as<RuntimeIntegerValue&>().get<unsigned>();
+	// std::cout << ii << std::endl;
+
+
+
+	//auto& ser = jsonSerialization();
+	////auto& ser = msgpackSerialization();
+
+	////std::string buffer;
+	////MyStringWriter writer(buffer);
+	//BytesBuffer buffer;
+	//MyBufferWriter writer(buffer);
+
+	//std::vector<int> ints {10,33,556};
+
+	////ser.jsonSerialize(writer, runtimeValue(60), {}).ignore();
+	////ser.serialize(writer, runtimeValue(ints)).ignore();
+	//ser.serialize(writer, *cold::com::createInstance<RuntimeValue>(ints)).ignore();
+
+	//MyStringReader reader(asStringView(buffer));
+
+	//// RuntimeValue rt = runtimeValue(ints);
+
+	//std::cout << asStringView(buffer) << std::endl;
+
+	//auto result = ser.deserialize(reader);
+
+	//std::list<float> floats;
+
+	//auto rt = cold::com::createInstance<RuntimeValue>(floats);
+
+	//RuntimeValue::assign(*rt, **result).ignore();
+	//for (auto f : floats) {
+	//	std::cout << f << std::endl;
+	//}
+
+
+
+	//ser.as<const ISerialization&>().
+
+}

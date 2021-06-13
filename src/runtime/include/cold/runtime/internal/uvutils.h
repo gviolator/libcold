@@ -168,7 +168,7 @@ using UvStreamHandle = UvHandle<uv_stream_t>;
 	if (const int resultCode__ = expression; resultCode__ != 0) \
 	{ \
 		const auto customMessage__ = cold::uvErrorMessage(resultCode__);\
-		cold::diagnostics::RuntimeCheck::raiseFailure(INLINED_SOURCE_INFO, nullptr, L ## #expression, cold::strings::wstringFromUtf8(customMessage__)); \
+		cold::diagnostics::RuntimeCheck::raiseFailure(INLINED_SOURCE_INFO, nullptr, L ## #expression, cold::utf8ToWString(customMessage__)); \
 	}\
 
 #define UV_THROW_ON_ERROR(expression)\

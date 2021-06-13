@@ -8,14 +8,14 @@ namespace cold::serialization::json {
 template<typename Stream, typename SrcEnc, typename TargetEnc>
 void writeJsonPrimitiveValue(rapidjson::Writer<Stream, SrcEnc, TargetEnc>& writer, const RuntimeValue::Ptr& value)
 {
-	if (value->is<const RuntimeInt32Value>())
-	{
-		writer.Int(value->as<const RuntimeInt32Value&>().get());
-	}
-	else if (value->is<const RuntimeUInt32Value>())
-	{
-		writer.Uint(value->as<const RuntimeUInt32Value&>().get());
-	}
+	//if (value->is<RuntimeInt32Value>())
+	//{
+	//	writer.Int(value->as<const RuntimeInt32Value&>().get());
+	//}
+	//else if (value->is<RuntimeUInt32Value>())
+	//{
+	//	writer.Uint(value->as<RuntimeUInt32Value&>().get());
+	//}
 }
 
 }

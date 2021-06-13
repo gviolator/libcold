@@ -121,7 +121,7 @@ struct ExceptionData
 };
 
 
-namespace internal__ {
+namespace cold_internal {
 
 template<typename>
 struct ResultCoroPromiseBase;
@@ -277,19 +277,19 @@ protected:
 };
 
 
-} // namespace internal__
+} // namespace cold_internal
 
 
 
 
 template<typename T>
-class [[nodiscard]] Result final : public internal__::ResultBase<T>
+class [[nodiscard]] Result final : public cold_internal::ResultBase<T>
 {
 public:
 
-	using internal__::ResultBase<T>::ResultBase;
-	using internal__::ResultBase<T>::operator =;
-	using internal__::ResultBase<T>::operator bool;
+	using cold_internal::ResultBase<T>::ResultBase;
+	using cold_internal::ResultBase<T>::operator =;
+	using cold_internal::ResultBase<T>::operator bool;
 
 	template<typename ... Args>
 	Result(InplaceResultTag, Args&& ... args)
@@ -362,29 +362,29 @@ public:
 private:
 	Result() = default;
 
-	Result(Result<T>* proxy_): internal__::ResultBase<T>(proxy_)
+	Result(Result<T>* proxy_): cold_internal::ResultBase<T>(proxy_)
 	{}
 
-	friend class cold::internal__::ResultCoroPromiseBase<T>;
+	friend class cold::cold_internal::ResultCoroPromiseBase<T>;
 
-	friend class cold::internal__::ResultCoroPromise<T>;
-
-	template<typename>
-	friend class cold::internal__::ResultCoroAwaiterRVRef;
+	friend class cold::cold_internal::ResultCoroPromise<T>;
 
 	template<typename>
-	friend class cold::internal__::ResultCoroAwaiterLVRef;
+	friend class cold::cold_internal::ResultCoroAwaiterRVRef;
+
+	template<typename>
+	friend class cold::cold_internal::ResultCoroAwaiterLVRef;
 };
 
 /**
 */
 template<>
-class [[nodiscard]] Result<void> : public internal__::ResultBase<void>
+class [[nodiscard]] Result<void> : public cold_internal::ResultBase<void>
 {
 public:
-	using internal__::ResultBase<void>::ResultBase;
-	using internal__::ResultBase<void>::operator =;
-	using internal__::ResultBase<void>::operator bool;
+	using cold_internal::ResultBase<void>::ResultBase;
+	using cold_internal::ResultBase<void>::operator =;
+	using cold_internal::ResultBase<void>::operator bool;
 
 	Result(Success)
 	{
@@ -394,20 +394,20 @@ public:
 private:
 	Result() = default;
 
-	friend class cold::internal__::ResultCoroPromiseBase<void>;
-	friend class cold::internal__::ResultCoroPromise<void>;
+	friend class cold::cold_internal::ResultCoroPromiseBase<void>;
+	friend class cold::cold_internal::ResultCoroPromise<void>;
 
 	template<typename>
-	friend class cold::internal__::ResultCoroAwaiterRVRef;
+	friend class cold::cold_internal::ResultCoroAwaiterRVRef;
 
 	template<typename>
-	friend class cold::internal__::ResultCoroAwaiterLVRef;
+	friend class cold::cold_internal::ResultCoroAwaiterLVRef;
 };
 
 template<typename T>
 inline constexpr bool IsResult = cold::IsTemplateOf<Result, T>;
 
-namespace internal__ {
+namespace cold_internal {
 
 template<typename T>
 struct ResultCoroAwaiterRVRef
@@ -560,7 +560,7 @@ void ResultCoroAwaiterLVRef<T>::await_suspend(std::coroutine_handle<ResultCoroPr
 }
 
 
-} // namespace internal__
+} // namespace cold_internal
 
 } // namespace cold
 
@@ -570,7 +570,7 @@ namespace STD_CORO {
 template<typename T, typename ... Args>
 struct coroutine_traits<cold::Result<T>, Args...>
 {
-	using promise_type = cold::internal__::ResultCoroPromise<T>;
+	using promise_type = cold::cold_internal::ResultCoroPromise<T>;
 };
 
 

@@ -30,7 +30,7 @@ private:
 template<typename ... T>
 AssertionResult check(const std::initializer_list<std::string_view>& formatStrings, std::string_view expectedString, bool expectSame, const T&...args)
 {
-	const std::wstring expectedWString = strings::wstringFromUtf8(expectedString);
+	const std::wstring expectedWString = cold::utf8ToWString(expectedString);
 
 	for (std::string_view formatStr : formatStrings)
 	{
@@ -43,7 +43,7 @@ AssertionResult check(const std::initializer_list<std::string_view>& formatStrin
 				;
 		}
 
-		const std::wstring formatWStr = strings::wstringFromUtf8(formatStr);
+		const std::wstring formatWStr = cold::utf8ToWString(formatStr);
 		const std::wstring wStr = strfmt(formatWStr, args ...);
 		if (expectSame != (wStr == expectedWString))
 		{

@@ -5,24 +5,25 @@
 #include <cold/diagnostics/runtimecheck.h>
 #include <cold/runtime/runtimeexport.h>
 #include <cold/utils/result.h>
+#include <cold/utils/stringconv.h>
 #include <cold/com/comptr.h>
 
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
-
+#include <utility>
 
 namespace cold {
 
 /**
 
 */
-struct ABSTRACT_TYPE RuntimeValue : IRefCounted
+struct ABSTRACT_TYPE RuntimeValue : virtual IRefCounted
 {
 	using Ptr = ComPtr<RuntimeValue>;
 
-	RUNTIME_EXPORT static Result<> assign(RuntimeValue::Ptr dst, const RuntimeValue::Ptr src);
+	RUNTIME_EXPORT static Result<> assign(RuntimeValue::Ptr dst, RuntimeValue::Ptr src);
 
 	virtual ~RuntimeValue() = default;
 
@@ -31,237 +32,215 @@ struct ABSTRACT_TYPE RuntimeValue : IRefCounted
 
 /**
 */
-struct RuntimePrimitiveValue : RuntimeValue
+struct ABSTRACT_TYPE RuntimePrimitiveValue : virtual RuntimeValue
 {
 	DECLARE_CLASS_BASE(RuntimeValue)
-
-protected:
-	RuntimePrimitiveValue() = default;
 };
 
-/**
 
-*/
-template<typename T>
-struct ABSTRACT_TYPE TypedRuntimePrimitiveValue : RuntimePrimitiveValue
+struct ABSTRACT_TYPE RuntimeStringValue : virtual RuntimePrimitiveValue
 {
 	DECLARE_CLASS_BASE(RuntimePrimitiveValue)
 
-	virtual Result<> set(T value) = 0;
+	virtual void setUtf8(std::string_view) = 0;
 
-	virtual T get() const = 0;
+	virtual void set(std::wstring) = 0;
 
-	T operator * () const {
-		return this->get();
-	}
+	virtual std::wstring get() const = 0;
 
-protected:
-	TypedRuntimePrimitiveValue() = default;
+	virtual std::string getUtf8() const = 0;
 };
 
 
 
-using RuntimeBooleanValue = TypedRuntimePrimitiveValue<bool>;
-using RuntimeUInt8Value = TypedRuntimePrimitiveValue<unsigned char>;
-using RuntimeUInt16Value = TypedRuntimePrimitiveValue<unsigned short>;
-using RuntimeUInt32Value = TypedRuntimePrimitiveValue<unsigned int>;
-using RuntimeUInt64Value = TypedRuntimePrimitiveValue<uint64_t>;
-using RuntimeInt8Value = TypedRuntimePrimitiveValue<char>;
-using RuntimeInt16Value = TypedRuntimePrimitiveValue<short int>;
-using RuntimeInt32Value = TypedRuntimePrimitiveValue<int>;
-using RuntimeInt64Value = TypedRuntimePrimitiveValue<int64_t>;
-using RuntimeSingleValue = TypedRuntimePrimitiveValue<float>;
-using RuntimeDoubleValue = TypedRuntimePrimitiveValue<double>;
-using RuntimeStringValue = TypedRuntimePrimitiveValue<std::string>;
-using RuntimeWStringValue = TypedRuntimePrimitiveValue<std::wstring>;
+struct ABSTRACT_TYPE RuntimeIntegerValue : virtual RuntimePrimitiveValue
+{
+	DECLARE_CLASS_BASE(RuntimePrimitiveValue)
+
+	virtual bool isSigned() const = 0;
+
+	virtual size_t bits() const = 0;
+
+	virtual void setInt64(int64_t) = 0;
+
+	virtual void setUint64(uint64_t) = 0;
+
+	virtual int64_t getInt64() const = 0;
+
+	virtual uint64_t getUint64() const = 0;
+
+
+	template<typename T>
+	void set(T value) requires(std::is_integral_v<T>)
+	{
+		//this->set(&value, sizeof(T));
+	}
+
+	template<typename T>
+	T get() requires(std::is_integral_v<T>)
+	{
+		//T value = 0;
+		//this->get(&value, sizeof(T));
+
+		return 0;
+	}
+};
+
+
+struct ABSTRACT_TYPE RuntimeFloatValue : virtual RuntimePrimitiveValue
+{
+	DECLARE_CLASS_BASE(RuntimePrimitiveValue)
+
+	virtual size_t bits() const = 0;
+
+	virtual void setDouble(double) = 0;
+
+	virtual void setSingle(float) = 0;
+
+	virtual double getDouble() const = 0;
+	
+	virtual float getSingle() const = 0;
+
+	template<typename T>
+	T get() const requires (std::is_integral_v<T> || std::is_floating_point_v<T>)
+	{
+		return static_cast<T>(this->getDouble());
+	}
+};
+
+
+struct ABSTRACT_TYPE RuntimeBooleanValue : virtual RuntimePrimitiveValue
+{
+	DECLARE_CLASS_BASE(RuntimePrimitiveValue)
+
+	virtual void set(bool) = 0;
+
+	virtual bool get() const = 0;
+};
+
 
 /**
 
 */
-struct ABSTRACT_TYPE RuntimeOptionalValue : RuntimeValue
+struct ABSTRACT_TYPE RuntimeOptionalValue : virtual RuntimeValue
 {
 	DECLARE_CLASS_BASE(RuntimeValue)
 
 	virtual bool hasValue() const = 0;
 
-	virtual const RuntimeValue::Ptr value() const = 0;
-
-	virtual RuntimeValue::Ptr value() = 0;
+	virtual RuntimeValue::Ptr value() const = 0;
 
 	virtual void reset() = 0;
 
 	virtual RuntimeValue::Ptr emplace(RuntimeValue::Ptr value = cold::nothing) = 0;
 
-	explicit inline operator bool () const {
+	explicit inline operator bool () const
+	{
 		return this->hasValue();
 	}
 };
 
 /**
 */
-struct ABSTRACT_TYPE RuntimeReadonlyCollection : RuntimeValue
+struct ABSTRACT_TYPE RuntimeReadonlyCollection : virtual RuntimeValue
 {
 	DECLARE_CLASS_BASE(RuntimeValue)
 
 	virtual size_t size() const = 0;
 
-	virtual const RuntimeValue::Ptr element(size_t index) const = 0;
+	virtual RuntimeValue::Ptr element(size_t index) const = 0;
 
-	virtual RuntimeValue::Ptr element(size_t index) = 0;
-
-	inline const RuntimeValue::Ptr operator[](size_t index) const
+	inline RuntimeValue::Ptr operator[](size_t index) const
 	{
 		return this->element(index);
 	}
-
-	inline RuntimeValue::Ptr operator[](size_t index) {
-		return this->element(index);
-	}
-
-protected:
-	using RuntimeValue::RuntimeValue;
 };
 
 
 /**
 */
-struct ABSTRACT_TYPE RuntimeArrayValue : RuntimeReadonlyCollection
+struct ABSTRACT_TYPE RuntimeArray : virtual RuntimeReadonlyCollection
 {
 	DECLARE_CLASS_BASE(RuntimeReadonlyCollection)
 
-	virtual void clear(std::optional<size_t> reserve = std::nullopt) = 0;
+	virtual void clear() = 0;
 
-	virtual void pushBack(RuntimeValue::Ptr value = cold::nothing) = 0;
+	virtual void reserve(size_t) = 0;
 
-	virtual RuntimeValue::Ptr back() = 0;
+	virtual Result<> push(RuntimeValue::Ptr) = 0;
 };
+
 
 /**
 */
-struct ABSTRACT_TYPE RuntimeTupleValue : RuntimeReadonlyCollection
+struct ABSTRACT_TYPE RuntimeTuple : virtual RuntimeReadonlyCollection
 {
 	DECLARE_CLASS_BASE(RuntimeReadonlyCollection)
 };
 
 
-struct ABSTRACT_TYPE RuntimeNamedValueCollection : RuntimeValue
+/**
+*/
+struct ABSTRACT_TYPE RuntimeReadonlyDictionary : virtual RuntimeValue
 {
 	DECLARE_CLASS_BASE(RuntimeValue)
 
-	virtual bool canAdd() const = 0;
 
 	virtual size_t size() const = 0;
 
 	virtual std::string_view key(size_t index) const = 0;
 
-	virtual const RuntimeValue::Ptr value(std::string_view) const = 0;
+	virtual RuntimeValue::Ptr value(std::string_view) const = 0;
 
-	virtual RuntimeValue::Ptr value(std::string_view) = 0;
+	virtual bool hasKey(std::string_view) const = 0;
 
-	virtual RuntimeValue::Ptr add(std::string_view, RuntimeValue::Ptr value = cold::nothing) = 0;
 
-	/*inline const RuntimeValue::Ptr operator[](std::string_view key) const {
-		return this->value(key);
-	}*/
-
-	inline RuntimeValue::Ptr operator[](std::string_view key) {
+	inline RuntimeValue::Ptr operator[](std::string_view key) const
+	{
 		return this->value(key);
 	}
 
-protected:
-	using RuntimeValue::RuntimeValue;
+	inline std::pair<std::string_view, RuntimeValue::Ptr> operator[](size_t index) const
+	{
+		auto key_ = this->key(index);
+		return {key_, this->value(key_)};
+	}
+};
+
+
+/**
+* 
+*/
+struct ABSTRACT_TYPE RuntimeDictionary : virtual RuntimeReadonlyDictionary
+{
+	DECLARE_CLASS_BASE(RuntimeReadonlyDictionary)
+
+
+	virtual void clear() = 0;
+
+	virtual Result<> set(std::string_view, RuntimeValue::Ptr value) = 0;
+
+	virtual RuntimeValue::Ptr erase(std::string_view) = 0;
 };
 
 
 /**
 	Generalized object runtime representation.
 */
-struct ABSTRACT_TYPE RuntimeObjectValue : RuntimeNamedValueCollection
+struct ABSTRACT_TYPE RuntimeObject : virtual RuntimeReadonlyDictionary
 {
-	DECLARE_CLASS_BASE(RuntimeNamedValueCollection)
+	DECLARE_CLASS_BASE(RuntimeReadonlyDictionary)
 
-	/**
-	*/
-	class Field
+	struct FieldInfo
 	{
-	public:
-		Field() = default;
 
-		Field(RuntimeValue::Ptr value_, std::string_view name_): m_value(std::move(value_)), m_name(name_)
-		{}
-		
-		explicit operator bool () const {
-			return static_cast<bool>(m_value);
-		}
-
-		RuntimeValue::Ptr value() const {
-			DEBUG_CHECK(m_value)
-			return m_value;
-		}
-
-		std::string_view name() const 
-		{
-			return m_name;
-		}
-
-	private:
-		RuntimeValue::Ptr m_value = cold::nothing;
-		std::string_view m_name;
 	};
 
-	/**
-	*/
-	class ConstField
-	{
-	public:
-		ConstField() = default;
+	virtual Result<> set(std::string_view, RuntimeValue::Ptr value) = 0;
 
-		ConstField(const RuntimeValue::Ptr& value_, std::string_view name_) : m_value(value_), m_name(name_)
-		{}
-
-		ConstField(const Field& field_) : m_value(field_ ? field_.value() : cold::nothing), m_name(field_.name())
-		{}
-		
-		explicit operator bool () const {
-			return static_cast<bool>(m_value);
-		}
-
-		const RuntimeValue::Ptr value() const {
-			DEBUG_CHECK(m_value)
-			return m_value;
-		}
-
-		std::string_view name() const {
-			return m_name;
-		}
-
-	private:
-		const RuntimeValue::Ptr m_value = cold::nothing;
-		std::string_view m_name;
-	};
-
-	virtual std::string_view typeName() const = 0;
-
-	virtual Field field(size_t index) = 0;
-
-	virtual ConstField field(size_t index) const = 0;
-
-	std::optional<Field> operator[](std::string_view) {
-		return std::nullopt;
-	}
-
-	std::optional<ConstField> operator[](std::string_view) const {
-		return std::nullopt;
-	}
+	virtual std::optional<FieldInfo> fieldInfo(std::string_view) const  = 0;
 };
 
-// struct ABSTRACT_TYPE RuntimeDictionaryValue : RuntimeNamedValueCollection
-// {
-// 	DECLARE_BASE(RuntimeValue)
 
-// protected:
-// 	RuntimeDictionaryValue(): RuntimeNamedValueCollection(RuntimeValueCategory::Dictionary)
-// 	{}
-// };
 
 }

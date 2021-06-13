@@ -3,9 +3,11 @@
 #include "cold/memory/rtstack.h"
 
 
-namespace cold::strings {
+namespace cold {
 
 namespace {
+
+
 
 inline std::wstring multiByteToWString(int encoding, std::string_view mbStr)
 {
@@ -50,15 +52,16 @@ inline std::string wideToMultiBytesString(int encoding, std::wstring_view str)
 	return {buffer.data(), buffer.size()};
 }
 
-}
+} // namespace
 
 
-std::string toUtf8(std::wstring_view wideStr)
+
+std::string wstringToUtf8(std::wstring_view wideStr)
 {
 	return wideToMultiBytesString(CP_UTF8, wideStr);
 }
 
-std::wstring wstringFromUtf8(std::string_view str)
+std::wstring utf8ToWString(std::string_view str)
 {
 	return multiByteToWString(CP_UTF8, str);
 }

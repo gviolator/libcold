@@ -1,18 +1,597 @@
 #include "pch.h"
-#if 0
+
 #include "jsonprimitive.h"
-#include "cold/serialization/json.h"
+// #include "cold/serialization/json.h"
 #include "cold/serialization/jsonserialization.h"
 #include "cold/com/comclass.h"
-#include "cold/serialization/runtimevalue.h"
 #include "cold/utils/scopeguard.h"
+#include "cold/utils/intrusivelist.h"
 
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
+#include <map>
 
 namespace cold::serialization {
+
+namespace {
+
+//
+using DefaultEncoding = rapidjson::UTF8<char>;
+using JsonDocument = rapidjson::GenericDocument<DefaultEncoding>;
+using JsonValue = rapidjson::GenericValue<DefaultEncoding>;
+
+
+
+/**
+
+*/
+//template<typename Encoding = rapidjson::UTF8<>>
+class ReaderStream
+{
+public:
+	using Ch = typename DefaultEncoding::Ch;
+
+	static constexpr Ch NoChar = 0;
+
+	ReaderStream(io::Reader& reader_): m_reader(reader_)
+	{
+		this->fillBuffer();
+	}
+
+	Ch Peek() const
+	{
+		return (m_inBufferPos == m_avail) ? NoChar : m_buffer[m_inBufferPos];
+	}
+
+	Ch Take()
+	{
+		if (m_inBufferPos == m_avail)
+		{
+			return NoChar;
+		}
+
+		++m_offset;
+		const Ch ch = m_buffer[m_inBufferPos];
+		if (++m_inBufferPos == m_avail)
+		{
+			this->fillBuffer();
+		}
+
+		return ch;
+	}
+
+	size_t Tell() const
+	{
+		return m_offset;
+	}
+
+#pragma region Methods that must be never called, but required for compilation
+
+	Ch* PutBegin()
+	{
+		RUNTIME_FAILURE("PutBegin must not be caller for json::ReaderStream")
+		return nullptr;
+	}
+
+	void Put(Ch)
+	{
+		RUNTIME_FAILURE("Put must not be caller for json::ReaderStream")
+	}
+
+	void Flush()
+	{
+		RUNTIME_FAILURE("Flush must not be caller for json::ReaderStream")
+	}
+
+	size_t PutEnd(Ch*)
+	{
+		RUNTIME_FAILURE("PutEnd must not be caller for json::ReaderStream")
+		return 0;
+	}
+
+#pragma endregion
+
+private:
+
+	static constexpr size_t PrefetchBufferSize = 64;
+	using Buffer = std::array<Ch, PrefetchBufferSize>;
+
+	void fillBuffer()
+	{
+		DEBUG_CHECK(m_inBufferPos == m_avail)
+
+		std::byte* const ptr = reinterpret_cast<std::byte*>(m_buffer.data());
+		const size_t readSize = m_buffer.size() * sizeof(Ch);
+		m_avail = m_reader.read(ptr, readSize);
+		DEBUG_CHECK(m_avail % sizeof(Ch) == 0)
+		m_avail = m_avail / sizeof(Ch);
+		m_inBufferPos = 0;
+	}
+
+	io::Reader& m_reader;
+	Buffer m_buffer;
+	size_t m_offset = 0;
+	size_t m_avail = 0;
+	size_t m_inBufferPos = 0;
+};
+
+
+Result<> parse(JsonDocument& document, ReaderStream& stream) {
+	
+	constexpr unsigned ParseFlags = rapidjson::kParseCommentsFlag | rapidjson::kParseStopWhenDoneFlag;
+
+	document.ParseStream<ParseFlags>(stream);
+
+	const auto error = document.GetParseError();
+
+	switch (error)
+	{
+	case rapidjson::kParseErrorNone:
+	{
+		break;
+	}
+
+	case rapidjson::kParseErrorDocumentEmpty:
+	{
+		return Excpt(EndOfStreamException);
+	}
+
+	default:
+	{
+		return MAKE_Excpt(SerializationException, strfmt(L"Json error:(%1)", error));
+	}
+	}
+
+	return success;
+}
+
+
+class ValueOrDocument
+{
+public:
+	ValueOrDocument(JsonDocument&& doc): m_valueOrDocument(std::in_place_type<JsonDocument>, std::move(doc))
+	{}
+
+	ValueOrDocument(JsonValue&& val): m_valueOrDocument(std::in_place_type<JsonValue>, std::move(val))
+	{}
+
+	ValueOrDocument(ValueOrDocument&& other) noexcept: m_valueOrDocument(std::move(other.m_valueOrDocument))// m_document(std::move(other.m_document)), m_value(std::move(other.m_value))
+	{}
+
+	JsonValue* operator-> ()
+	{
+		DEBUG_CHECK(std::holds_alternative<JsonValue>(m_valueOrDocument) || std::holds_alternative<JsonDocument>(m_valueOrDocument))
+
+		JsonValue& valueRef = std::holds_alternative<JsonValue>(m_valueOrDocument) ? std::get<JsonValue>(m_valueOrDocument) : static_cast<JsonValue&>(std::get<JsonDocument>(m_valueOrDocument));
+		return &valueRef;
+	}
+
+	const JsonValue* operator-> () const
+	{
+		DEBUG_CHECK(std::holds_alternative<JsonValue>(m_valueOrDocument) || std::holds_alternative<JsonDocument>(m_valueOrDocument))
+
+		const JsonValue& valueRef = std::holds_alternative<JsonValue>(m_valueOrDocument) ? std::get<JsonValue>(m_valueOrDocument) : static_cast<const JsonValue&>(std::get<JsonDocument>(m_valueOrDocument));
+		return &valueRef;
+	}
+
+	JsonValue& operator* ()
+	{
+		DEBUG_CHECK(std::holds_alternative<JsonValue>(m_valueOrDocument) || std::holds_alternative<JsonDocument>(m_valueOrDocument))
+
+		return std::holds_alternative<JsonValue>(m_valueOrDocument) ? std::get<JsonValue>(m_valueOrDocument) : static_cast<JsonValue&>(std::get<JsonDocument>(m_valueOrDocument));
+	}
+
+	const JsonValue& operator* () const
+	{
+		DEBUG_CHECK(std::holds_alternative<JsonValue>(m_valueOrDocument) || std::holds_alternative<JsonDocument>(m_valueOrDocument))
+
+		return std::holds_alternative<JsonValue>(m_valueOrDocument) ? std::get<JsonValue>(m_valueOrDocument) : static_cast<const JsonValue&>(std::get<JsonDocument>(m_valueOrDocument));
+	}
+
+private:
+	std::variant<JsonValue, JsonDocument> m_valueOrDocument;
+};
+
+
+RuntimeValue::Ptr createRuntimeValueFromJson(ValueOrDocument value);
+
+
+class JsonRuntimeValueBase : public virtual RuntimePrimitiveValue
+{
+	DECLARE_CLASS_BASE(RuntimePrimitiveValue)
+
+public:
+
+	JsonRuntimeValueBase(ValueOrDocument jsonValue): m_jsonValue(std::move(jsonValue))
+	{}
+
+	bool isMutable() const override
+	{
+		return false;
+	}
+
+	//bool hasValue() const override
+	//{
+	//	return m_jsonValue->GetType() != rapidjson::kNullType;
+	//}
+
+	//RuntimeValue::Ptr value() const
+	//{
+	//	if (!this->hasValue())
+	//	{
+	//		return nothing;
+	//	}
+
+	//	return com::Acquire{const_cast<JsonRuntimeValueBase&>(*this).as<RuntimeValue*>()};
+	//}
+
+	//void reset() override
+	//{
+
+	//}
+
+	//RuntimeValue::Ptr emplace(RuntimeValue::Ptr value) override
+	//{
+	//	return nothing;
+	//}
+
+	JsonValue& jsonValue()
+	{
+		return *m_jsonValue;
+	}
+
+	const JsonValue& jsonValue() const
+	{
+		return *m_jsonValue;
+	}
+
+private:
+
+	ValueOrDocument m_jsonValue;
+};
+
+
+class JsonRuntimeIntegerValue final : public virtual JsonRuntimeValueBase, public virtual RuntimeIntegerValue
+{
+	COMCLASS_(JsonRuntimeValueBase, RuntimeIntegerValue)
+
+public:
+
+	using JsonRuntimeValueBase::JsonRuntimeValueBase;
+
+	bool isSigned() const override
+	{
+		return this->jsonValue().IsInt() || this->jsonValue().IsInt64();
+	}
+
+	size_t bits() const
+	{
+		return this->jsonValue().IsInt64() || this->jsonValue().IsUint64() ? sizeof(int64_t) : sizeof(int32_t);
+	}
+
+
+	void setInt64(int64_t) override
+	{
+	}
+
+	void setUint64(uint64_t) override
+	{
+	}
+
+	int64_t getInt64() const override
+	{
+		return this->getWithRangeCheck<int64_t>();
+	}
+
+	uint64_t getUint64() const override
+	{
+		return this->getWithRangeCheck<uint64_t>();
+	}
+
+private:
+
+	template<typename T>
+	T getWithRangeCheck() const requires(std::is_integral_v<T>)
+	{
+		decltype(auto) value = this->jsonValue();
+
+		if (value.IsInt())
+		{
+			return castWithRangeCheck<T>(value.GetInt());
+		}
+		else if (value.IsUint())
+		{
+			return castWithRangeCheck<T>(value.GetUint());
+		}
+		else if (value.IsInt64())
+		{
+			return castWithRangeCheck<T>(value.GetInt64());
+		}
+
+		DEBUG_CHECK(value.IsUint64())
+
+		return castWithRangeCheck<T>(value.GetUint64());
+	}
+	
+	template<typename T, typename U>
+	inline static T castWithRangeCheck(U value)
+	{
+		if constexpr (sizeof(T) < sizeof(U))
+		{
+			// if (static_cast<std::numeric_limits<T>::max() < value
+		}
+
+		return static_cast<T>(value);
+	}
+};
+
+
+class JsonRuntimeFloatValue : public virtual JsonRuntimeValueBase, public RuntimeFloatValue
+{
+	COMCLASS_(JsonRuntimeValueBase, RuntimeFloatValue)
+
+public:
+
+	using JsonRuntimeValueBase::JsonRuntimeValueBase;
+
+	size_t bits() const override
+	{
+		return this->jsonValue().IsDouble() ? sizeof(double) : sizeof(float);
+	}
+
+	void setDouble(double) override
+	{
+	}
+
+	void setSingle(float) override
+	{
+
+	}
+
+	double getDouble() const override
+	{
+		if (this->jsonValue().IsDouble())
+		{
+			return this->jsonValue().GetDouble();
+		}
+
+		DEBUG_CHECK(this->jsonValue().IsFloat())
+
+		return static_cast<double>(this->jsonValue().GetFloat());
+	}
+	
+	float getSingle() const override
+	{
+		return this->jsonValue().GetFloat();
+	}
+};
+
+/*
+
+class JsonRuntimeNumberValue final : public JsonRuntimeValueBase, public RuntimeIntegerValue, public RuntimeFloatValue
+{
+	COMCLASS_(JsonRuntimeValueBase, RuntimeIntegerValue, RuntimeFloatValue)
+
+public:
+
+	using JsonRuntimeValueBase::JsonRuntimeValueBase;
+
+	void setInt64(int64_t) override
+	{
+	}
+
+	void setI32(int32_t) override
+	{
+	}
+
+	void setI16(int16_t) override
+	{
+	}
+
+	void setI8(int8_t) override
+	{
+	}
+
+	void setUint64(uint64_t) override
+	{
+	}
+
+	void setU32(uint32_t) override
+	{
+	}
+
+	void setU16(uint16_t) override
+	{
+	}
+
+	void setU8(uint8_t) override
+	{
+	}
+
+	int64_t getInt64() const override
+	{
+		return jsonValue().GetInt64();
+	}
+
+	uint64_t getUint64() const override
+	{
+		return jsonValue().GetUint64();
+	}
+
+	void setDouble(double) override
+	{
+	}
+
+	void setSingle(float) override
+	{
+	}
+
+	double getDouble() const override
+	{
+		return jsonValue().GetDouble();
+	}
+	
+	float getSingle() const override
+	{
+		return jsonValue().GetFloat();
+	}
+};
+*/
+class JsonRuntimeArray final : public JsonRuntimeValueBase, public virtual RuntimeReadonlyCollection, public virtual RuntimeTuple
+{
+	COMCLASS_(JsonRuntimeValueBase, RuntimeReadonlyCollection, RuntimeTuple)
+
+public:
+
+	JsonRuntimeArray(ValueOrDocument value)
+		: JsonRuntimeValueBase(std::move(value))
+		, m_jsonArray(arrayOfValue(this->jsonValue()))
+		, m_size(static_cast<size_t>(this->m_jsonArray.Size()))
+	{
+		m_elements.resize(this->size());
+	}
+
+	size_t size() const override
+	{
+		return m_size;
+	}
+
+	RuntimeValue::Ptr element(size_t index) const override
+	{
+		if (this->size() <= index)
+		{
+			throw Excpt_("Index ({0}) out of bounds [0, {1}]", index, this->size());
+		}
+
+		if (!m_elements[index])
+		{
+			JsonValue& el = m_jsonArray[index];
+			m_elements[index] = createRuntimeValueFromJson(std::move(el));
+		}
+
+		return m_elements[index];
+	}
+
+	//void clear() override
+	//{
+	//}
+
+	//void reserve(size_t) override
+	//{
+	//}
+
+	//void push(RuntimeValue::Ptr) override
+	//{}
+
+private:
+
+	static inline JsonValue::Array arrayOfValue(JsonValue& value)
+	{
+		DEBUG_CHECK(value.IsArray())
+
+		return value.GetArray();
+	}
+
+
+	JsonValue::Array m_jsonArray;
+	const size_t m_size;
+	mutable std::vector<RuntimeValue::Ptr> m_elements;
+};
+
+
+class JsonRuntimeDictionary final : public JsonRuntimeValueBase, public virtual RuntimeReadonlyDictionary
+{
+	COMCLASS_(JsonRuntimeValueBase, RuntimeReadonlyDictionary)
+
+public:
+	JsonRuntimeDictionary(ValueOrDocument value): JsonRuntimeValueBase(std::move(value))
+	{
+		DEBUG_CHECK(this->jsonValue().IsObject())
+
+		JsonValue::Object obj = this->jsonValue().GetObj();
+		
+		for (auto& member : obj)
+		{
+			std::string_view memberName = member.name.GetString();
+			auto value = createRuntimeValueFromJson(std::move(member.value));
+
+			m_members.emplace(std::move(memberName), std::move(value));
+			// member.value
+		}
+	}
+
+	size_t size() const override
+	{
+		return m_members.size();
+	}
+
+	std::string_view key(size_t index) const override
+	{
+		DEBUG_CHECK(index < this->size(), "Invalid index ({0}) > size:({1})", index, m_members.size())
+
+		auto iter = m_members.begin();
+		std::advance(iter, index);
+
+		return iter->first;
+	}
+
+	RuntimeValue::Ptr value(std::string_view key) const override
+	{
+		if (auto iter = m_members.find(key); iter != m_members.end())
+		{
+			return iter->second;
+		}
+
+		return nothing;
+	}
+
+	bool hasKey(std::string_view key) const override
+	{
+		return m_members.find(key) != m_members.end();
+	}
+
+private:
+
+	std::map<std::string_view, ComPtr<JsonRuntimeValueBase>, std::less<>> m_members;
+
+};
+
+//-----------------------------------------------------------------------------
+RuntimeValue::Ptr createRuntimeValueFromJson(ValueOrDocument value)
+{
+	if (value->GetType() == rapidjson::kNumberType)
+	{
+		if (value->IsFloat() || value->IsDouble())
+		{
+			return com::createInstance<JsonRuntimeFloatValue>(std::move(value));
+		}
+
+		DEBUG_CHECK(value->IsInt() || value->IsUint() || value->IsInt64() || value->IsUint64())
+
+		return com::createInstance<JsonRuntimeIntegerValue, RuntimeValue>(std::move(value));
+	}
+
+	if (value->GetType() == rapidjson::kArrayType)
+	{
+		return com::createInstance<JsonRuntimeArray>(std::move(value));
+	}
+
+	if (value->GetType() == rapidjson::kObjectType)
+	{
+		return com::createInstance<JsonRuntimeDictionary>(std::move(value));
+	}
+
+	return {};
+
+}
+
+} // namespace
+
+
+
+#if 0
 
 namespace json {
 
@@ -306,12 +885,41 @@ private:
 
 //-----------------------------------------------------------------------------
 
-const IJsonSerialization& jsonSerialization() {
+const IJsonSerialization& jsonSerialization()
+{
 	static JsonSerialization serializer;
 	return (serializer);
 }
 
+#endif
+
+
+Result<> jsonWrite(io::Writer&, const RuntimeValue::Ptr&, JsonSettings)
+{
+	return success;
+}
+
+Result<RuntimeValue::Ptr> jsonParse(io::Reader& reader)
+{
+	JsonDocument document;
+	ReaderStream stream{reader};
+
+	if (auto result = parse(document, stream); !result)
+	{
+		return result.err();
+	}
+
+	return createRuntimeValueFromJson(std::move(document));
+
+	// return RuntimeValue::Ptr{};
+}
+
+Result<> jsonDeserialize(io::Reader&, RuntimeValue::Ptr)
+{
+	return success;
 }
 
 
-#endif
+}
+
+

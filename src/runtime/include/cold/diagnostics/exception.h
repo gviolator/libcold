@@ -54,14 +54,14 @@ public:
 	{}
 
 	ExceptionImpl(const diagnostics::SourceInfo& sourceInfo_, std::string_view message_,  unsigned flags_ = 0)
-		: ExceptionImpl(sourceInfo_, strings::wstringFromUtf8(message_), flags_)
+		: ExceptionImpl(sourceInfo_, cold::utf8ToWString(message_), flags_)
 	{}
 
 	const char* what() const override
 	{
 		if (!m_what)
 		{
-			m_what = strings::toUtf8(m_message);
+			m_what = cold::wstringToUtf8(m_message);
 		}
 		return m_what->c_str();
 	}

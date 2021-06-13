@@ -13,6 +13,7 @@
 #include <forward_list>
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -24,6 +25,7 @@
 #include <string_view>
 #include <type_traits>
 #include <thread>
+#include <variant>
 #include <vector>
 
 #include <uv.h>

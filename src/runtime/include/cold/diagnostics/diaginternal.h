@@ -14,14 +14,16 @@ inline std::wstring diagWStringMessage() {
 ///
 /// </summary>
 template<typename ... T>
-inline std::wstring diagWStringMessage(std::wstring_view message, const T& ... args) {
+std::wstring diagWStringMessage(std::wstring_view message, const T& ... args)
+{
 	return cold::strfmt(message, args ...);
 }
 
 
 template<typename ... T>
-inline std::wstring diagWStringMessage(std::string_view message, const T& ... args) {
-	const std::wstring wstrMessage = strings::wstringFromUtf8(message);
+std::wstring diagWStringMessage(std::string_view message, const T& ... args)
+{
+	const std::wstring wstrMessage = cold::utf8ToWString(message);
 	return cold::strfmt(wstrMessage, args ...);
 }
 

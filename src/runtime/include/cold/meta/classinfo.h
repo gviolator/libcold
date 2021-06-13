@@ -59,25 +59,30 @@ public:
 		, m_attributes{std::move(attributes)...}
 	{}
 
-	constexpr bool isConst() const {
+	constexpr bool isConst() const
+	{
 		return std::is_const_v<T>;
 	}
 
-	T& value() const {
+	T& value() const
+	{
 		DEBUG_CHECK(m_value != nullptr, "Attempt to access filed of uninitialized instance")
 		return *m_value;
 	}
 
-	std::string_view name() const {
+	std::string_view name() const
+	{
 		return m_name;
 	}
 
-	decltype(auto) attributes() const {
+	decltype(auto) attributes() const
+	{
 		return (m_attributes);
 	}
 
 	template<typename Attribute>
-	constexpr bool hasAttribute() const {
+	constexpr bool hasAttribute() const
+	{
 		return HasAttribute<Attribute>;
 	}
 
