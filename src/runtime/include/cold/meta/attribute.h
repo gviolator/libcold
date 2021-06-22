@@ -107,10 +107,12 @@ struct UnwrapAttribute__<A, false> {
 template<typename T, typename A>
 /*consteval */constexpr bool attributeDefined()
 {
-	if constexpr (ExternalAttribute<T, A>::Defined) {
+	if constexpr (ExternalAttribute<T, A>::Defined)
+	{
 		return true;
 	}
-	else {
+	else
+	{
 		using ClassSpecifiedAttributes = typelist::TypeListOf<decltype(classAttributes<T>())>;
 		using AttributeTypes = typelist::Transform<ClassSpecifiedAttributes, UnwrapAttribute>;
 

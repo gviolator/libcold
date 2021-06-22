@@ -11,14 +11,18 @@ struct OptionalValueOperations;
 
 template<typename T>
 concept OptionalRepresentable = 
-	requires(T& opt) {
+	requires(T& opt)
+	{
 		OptionalValueOperations<T>::reset(opt);
 		OptionalValueOperations<T>::value(opt);
-	} && requires(const T& opt) {
+	} &&
+	requires(const T& opt)
+	{
 		{OptionalValueOperations<T>::hasValue(opt)} -> concepts::Same<bool>;
 		OptionalValueOperations<T>::value(opt);
 	};
 
+#if 0
 /**
 
 */
@@ -32,26 +36,31 @@ public:
 	OptionalRepresentation(OptionalType& opt_): m_optional(opt_)
 	{}
 
-	bool hasValue() const {
+	bool hasValue() const
+	{
 		return OptionalValueOperations<OptionalType>::hasValue(m_optional);
 	}
 
-	explicit operator bool () const {
+	explicit operator bool () const
+	{
 		return this->hasValue();
 	}
 
-	auto value() {
+	auto value()
+	{
 		decltype(auto) valueRef = OptionalValueOperations<OptionalType>::value(m_optional);
 		static_assert(std::is_reference_v<decltype(valueRef)>);
 		return represent(valueRef);
 	}
 
-	void reset() {
+	void reset()
+	{
 		OptionalValueOperations<OptionalType>::reset(m_optional);
 	}
 
 	template<typename ... Args>
-	auto emplace(Args&& ... args) {
+	auto emplace(Args&& ... args)
+	{
 		decltype(auto) valueRef = OptionalValueOperations<OptionalType>::emplace(m_optional, std::forward<Args>(args)...);
 		static_assert(std::is_reference_v<decltype(valueRef)>);
 
@@ -74,11 +83,13 @@ public:
 	ConstOptionalRepresentation(const OptionalType& opt_): m_optional(opt_)
 	{}
 
-	bool hasValue() const {
+	bool hasValue() const
+	{
 		return OptionalValueOperations<OptionalType>::hasValue(m_optional);
 	}
 
-	explicit operator bool () const {
+	explicit operator bool () const
+	{
 		return this->hasValue();
 	}
 
@@ -95,13 +106,17 @@ private:
 //-----------------------------------------------------------------------------
 
 template<OptionalRepresentable T>
-OptionalRepresentation<T> represent(T& value) {
+OptionalRepresentation<T> represent(T& value)
+{
 	return value;
 }
 
 template<OptionalRepresentable T>
-ConstOptionalRepresentation<T> represent(const T& value){
+ConstOptionalRepresentation<T> represent(const T& value)
+{
 	return value;
 }
+
+#endif
 
 } // namespace cold::meta

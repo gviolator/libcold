@@ -3,13 +3,16 @@
 #include "arrayrepresentation.h"
 #include "optionalrepresentation.h"
 #include "tuplerepresentation.h"
+#include "dictionaryrepresentation.h"
 #include <cold/diagnostics/runtimecheck.h>
 
 #include <array>
 #include <list>
+#include <map>
 #include <optional>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace cold::meta {
@@ -32,7 +35,6 @@ struct ArrayValueOperations<std::vector<T, A...>>
 		DEBUG_CHECK(index < container.size(), "Invalid list access [%1], size (%2)", container.size(), index);
 		return container[index];
 	}
-
 
 	static decltype(auto) element(Type& container, size_t index)
 	{
@@ -151,15 +153,44 @@ struct TupleValueOperations<std::tuple<T...>>
 	template<size_t Index>
 	static decltype(auto) element(Tuple& tuple)
 	{
+		static_assert(Index < TupleSize, "Invalid tuple element index");
+
 		return std::get<Index>(tuple);
 	}
 
 	template<size_t Index>
 	static decltype(auto) element(const Tuple& tuple)
 	{
+		static_assert(Index < TupleSize, "Invalid tuple element index");
+
 		return std::get<Index>(tuple);
 	}
 };
+
+
+template<typename First, typename Second>
+struct TupleValueOperations<std::pair<First, Second>>
+{
+	static constexpr size_t TupleSize = 2;
+
+	using Tuple = std::pair<First, Second>;
+	using TupleElements = TypeList<First, Second>;
+
+	template<size_t Index>
+	static decltype(auto) element(Tuple& tuple)
+	{
+		static_assert(Index < TupleSize, "Invalid pair index");
+		return std::get<Index>(tuple);
+	}
+
+	template<size_t Index>
+	static decltype(auto) element(const Tuple& tuple)
+	{
+		static_assert(Index < TupleSize, "Invalid pair index");
+		return std::get<Index>(tuple);
+	}
+};
+
 
 /**
 */
@@ -170,7 +201,8 @@ struct OptionalValueOperations<std::optional<T>>
 	using Optional = std::optional<T>;
 
 
-	static bool hasValue(const Optional& opt) {
+	static bool hasValue(const Optional& opt)
+	{
 		return opt.has_value();
 	}
 
@@ -195,6 +227,90 @@ struct OptionalValueOperations<std::optional<T>>
 	static ValueType& emplace(Optional& opt, Values&& ... values)
 	{
 		return opt.emplace(std::forward<Values>(values)...);
+	}
+};
+
+template<typename Key_, typename Value_, typename ... Traits>
+struct DictionaryValueOperations<std::map<Key_, Value_, Traits ... >>
+{
+	using Key = Key_;
+	using Value = Value_;
+	using Type = std::map<Key, Value, Traits ... >;
+
+	static size_t size(const Type& dict)
+	{
+		return dict.size();
+	}
+
+	static const Key& key(const Type& dict, size_t index)
+	{
+		DEBUG_CHECK(index < dict.size())
+
+		auto head = dict.begin();
+		std::advance(head, index);
+		return head->first;
+	}
+
+	static bool find(const Type& dict, const Key key, std::add_const_t<Value*>* value = nullptr)
+	{
+		if (auto iter = dict.find(key); iter != dict.end())
+		{
+			if (value)
+			{
+				*value = &iter->second;
+			}
+
+			return true;
+		}
+
+		if (value)
+		{
+			*value = nullptr;
+		}
+
+		return false;
+	}
+
+	static bool find(Type& dict, const Key key, Value** value = nullptr)
+	{
+		if (auto iter = dict.find(key); iter != dict.end())
+		{
+			if (value)
+			{
+				*value = &iter->second;
+			}
+
+			return true;
+		}
+
+		if (value)
+		{
+			*value = nullptr;
+		}
+
+		return false;
+	}
+
+	static void clear(Type& dict)
+	{
+		dict.clear();
+	}
+
+	template<typename ... Args>
+	static decltype(auto) emplace(Type& dict, Key key, Args&& ... args)
+	{
+		auto [iter, success] = dict.emplace(
+			std::piecewise_construct,
+			std::forward_as_tuple(std::move(key)),
+			std::forward_as_tuple(std::forward<Args>(args)...)
+		);
+
+		if (!success)
+		{
+
+		}
+
+		return (iter->second); // force return reference
 	}
 };
 

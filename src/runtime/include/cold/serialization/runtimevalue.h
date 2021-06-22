@@ -130,9 +130,7 @@ struct ABSTRACT_TYPE RuntimeOptionalValue : virtual RuntimeValue
 
 	virtual RuntimeValue::Ptr value() const = 0;
 
-	virtual void reset() = 0;
-
-	virtual RuntimeValue::Ptr emplace(RuntimeValue::Ptr value = cold::nothing) = 0;
+	virtual Result<> setValue(RuntimeValue::Ptr value = cold::nothing) = 0;
 
 	explicit inline operator bool () const
 	{

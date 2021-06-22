@@ -269,8 +269,7 @@ Result<> RuntimeValue::assign(RuntimeValue::Ptr dst, RuntimeValue::Ptr src)
 		else 
 		{
 			auto& dstOpt = dst->as<RuntimeOptionalValue&>();
-			dstOpt.reset();
-			return success;
+			return dstOpt.setValue();
 		}
 	}
 
