@@ -405,6 +405,8 @@ public:\
 	IMPLEMENT_REFCOUNTED(rc_) \
 	IMPLEMENT_ANYTHING \
 
+#define IMPLEMENT_COMCLASS_ IMPLEMENT_COMCLASS(cold::com::RCPolicy::Concurrent)
+
 
 #define COMCLASS(rc_, ...)\
 	CLASS_ATTRIBUTES\

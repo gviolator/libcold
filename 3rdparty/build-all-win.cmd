@@ -9,3 +9,5 @@ call %~dp0\windows\build-libuv.cmd Debug
 call %~dp0\windows\build-libuv.cmd RelWithDebInfo
 call %~dp0\windows\build-rapidjson.cmd Debug
 call %~dp0\windows\build-rapidjson.cmd RelWithDebInfo
+call %~dp0\windows\build-cryptopp.cmd Debug
+call %~dp0\windows\build-cryptopp.cmd RelWithDebInfo

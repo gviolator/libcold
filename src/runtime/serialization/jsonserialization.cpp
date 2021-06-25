@@ -22,7 +22,8 @@ using DefaultEncoding = rapidjson::UTF8<char>;
 using JsonDocument = rapidjson::GenericDocument<DefaultEncoding>;
 using JsonValue = rapidjson::GenericValue<DefaultEncoding>;
 
-
+template<typename Stream>
+using JsonDefaultWriter = rapidjson::PrettyWriter<Stream,  DefaultEncoding, DefaultEncoding>;
 
 /**
 
@@ -118,6 +119,34 @@ private:
 };
 
 
+
+template<typename C = char>
+class WriterStream
+{
+public:
+	using Ch = C;
+
+	WriterStream(io::Writer& writer_) : m_writer(writer_)
+	{}
+
+	void Put(Ch c)
+	{
+		m_writer.write(reinterpret_cast<std::byte*>(&c), sizeof(c));
+	}
+
+	void Flush()
+	{}
+
+private:
+
+	io::Writer& m_writer;
+
+	friend void PutUnsafe(WriterStream<C>& stream, Ch c)
+	{
+		stream.m_writer.write(reinterpret_cast<std::byte*>(&c), sizeof(c));
+	}
+};
+
 Result<> parse(JsonDocument& document, ReaderStream& stream) {
 	
 	constexpr unsigned ParseFlags = rapidjson::kParseCommentsFlag | rapidjson::kParseStopWhenDoneFlag;
@@ -212,30 +241,6 @@ public:
 		return false;
 	}
 
-	//bool hasValue() const override
-	//{
-	//	return m_jsonValue->GetType() != rapidjson::kNullType;
-	//}
-
-	//RuntimeValue::Ptr value() const
-	//{
-	//	if (!this->hasValue())
-	//	{
-	//		return nothing;
-	//	}
-
-	//	return com::Acquire{const_cast<JsonRuntimeValueBase&>(*this).as<RuntimeValue*>()};
-	//}
-
-	//void reset() override
-	//{
-
-	//}
-
-	//RuntimeValue::Ptr emplace(RuntimeValue::Ptr value) override
-	//{
-	//	return nothing;
-	//}
 
 	JsonValue& jsonValue()
 	{
@@ -368,77 +373,7 @@ public:
 	}
 };
 
-/*
 
-class JsonRuntimeNumberValue final : public JsonRuntimeValueBase, public RuntimeIntegerValue, public RuntimeFloatValue
-{
-	COMCLASS_(JsonRuntimeValueBase, RuntimeIntegerValue, RuntimeFloatValue)
-
-public:
-
-	using JsonRuntimeValueBase::JsonRuntimeValueBase;
-
-	void setInt64(int64_t) override
-	{
-	}
-
-	void setI32(int32_t) override
-	{
-	}
-
-	void setI16(int16_t) override
-	{
-	}
-
-	void setI8(int8_t) override
-	{
-	}
-
-	void setUint64(uint64_t) override
-	{
-	}
-
-	void setU32(uint32_t) override
-	{
-	}
-
-	void setU16(uint16_t) override
-	{
-	}
-
-	void setU8(uint8_t) override
-	{
-	}
-
-	int64_t getInt64() const override
-	{
-		return jsonValue().GetInt64();
-	}
-
-	uint64_t getUint64() const override
-	{
-		return jsonValue().GetUint64();
-	}
-
-	void setDouble(double) override
-	{
-	}
-
-	void setSingle(float) override
-	{
-	}
-
-	double getDouble() const override
-	{
-		return jsonValue().GetDouble();
-	}
-	
-	float getSingle() const override
-	{
-		return jsonValue().GetFloat();
-	}
-};
-*/
 class JsonRuntimeArray final : public JsonRuntimeValueBase, public virtual RuntimeReadonlyCollection, public virtual RuntimeTuple
 {
 	COMCLASS_(JsonRuntimeValueBase, RuntimeReadonlyCollection, RuntimeTuple)
@@ -587,56 +522,47 @@ RuntimeValue::Ptr createRuntimeValueFromJson(ValueOrDocument value)
 
 }
 
-} // namespace
 
-
-
-#if 0
-
-namespace json {
-
-using DefaultEncoding = rapidjson::UTF8<char>;
-using JsonDocument = rapidjson::GenericDocument<DefaultEncoding>;
-using JsonValue = rapidjson::GenericValue<DefaultEncoding>;
-
-
-/**
-*/
-template<typename C = char>
-class WriterStream
+template<typename Stream, typename SrcEnc, typename TargetEnc>
+void writeJsonPrimitiveValue(rapidjson::Writer<Stream, SrcEnc, TargetEnc>& writer, const RuntimePrimitiveValue& value)
 {
-public:
-	using Ch = C;
-
-	WriterStream(io::Writer& writer_) : m_writer(writer_)
-	{}
-
-	void Put(Ch c) {
-		m_writer.write(reinterpret_cast<std::byte*>(&c), sizeof(c));
+	if (auto integer = value.as<const RuntimeIntegerValue*>(); integer)
+	{
+		if (integer->isSigned())
+		{
+			writer.Int64(integer->getInt64());
+		}
+		else
+		{
+			writer.Uint64(integer->getUint64());
+		}
 	}
-
-	void Flush()
-	{}
-
-private:
-
-	io::Writer& m_writer;
-
-	friend void PutUnsafe(WriterStream<C>& stream, Ch c) {
-		stream.m_writer.write(reinterpret_cast<std::byte*>(&c), sizeof(c));
+	else if (auto floatPoint = value.as<const RuntimeFloatValue*>(); floatPoint)
+	{
+		if (floatPoint->bits() == sizeof(double))
+		{
+			writer.Double(floatPoint->getDouble());
+		}
+		else
+		{
+			writer.Double(floatPoint->getDouble());
+		}
 	}
-};
+}
+
+
 
 /**
 */ 
 template<typename Stream, typename SrcEnc, typename TargetEnc>
-Result<> writeJsonValue(rapidjson::Writer<Stream, SrcEnc, TargetEnc>& writer, const RuntimeValue::Ptr value) {
+Result<> writeJsonValue(rapidjson::Writer<Stream, SrcEnc, TargetEnc>& writer, const RuntimeValue::Ptr& value)
+{
 	
-	if (value->is<RuntimePrimitiveValue>())
+	if (const RuntimePrimitiveValue* primitiveValue = value->as<const RuntimePrimitiveValue*>(); primitiveValue)
 	{
-		writeJsonPrimitiveValue(writer, value);
+		writeJsonPrimitiveValue(writer, *primitiveValue);
 	}
-	else if (value->is<RuntimeArrayValue>() || value->is<RuntimeTupleValue>())
+	else if (value->is<RuntimeReadonlyCollection>())
 	{
 		writer.StartArray();
 
@@ -654,7 +580,7 @@ Result<> writeJsonValue(rapidjson::Writer<Stream, SrcEnc, TargetEnc>& writer, co
 			}
 		}
 	}
-	else if (value->is<RuntimeObjectValue>())
+	else if (value->is<RuntimeReadonlyDictionary>())
 	{
 		writer.StartObject();
 
@@ -662,14 +588,15 @@ Result<> writeJsonValue(rapidjson::Writer<Stream, SrcEnc, TargetEnc>& writer, co
 			writer.EndObject();
 		};
 
-		const RuntimeObjectValue& obj = value->as<const RuntimeObjectValue&>();
+		const RuntimeReadonlyDictionary& obj = value->as<const RuntimeReadonlyDictionary&>();
 		for (size_t i = 0, sz = obj.size(); i < sz; ++i)
 		{
-			auto field = obj.field(i);
-			auto name = field.name();
-			writer.String(name.data(), name.size());
+			auto key = obj.key(i);
+			auto value = obj.value(key);
 
-			if (auto result = writeJsonValue(writer, field.value()); !result)
+			writer.String(key.data(), key.size());
+
+			if (auto result = writeJsonValue(writer, value); !result)
 			{
 				return result;
 			}
@@ -679,224 +606,16 @@ Result<> writeJsonValue(rapidjson::Writer<Stream, SrcEnc, TargetEnc>& writer, co
 	return success;
 }
 
-class JsonValueHolder
+} // namespace
+
+
+Result<> jsonWrite(io::Writer& charWriter, const RuntimeValue::Ptr& value, JsonSettings settings)
 {
-public:
-	JsonValueHolder(json::JsonDocument&& doc_): m_document(std::move(doc_))
-	{}
+	WriterStream<> stream(charWriter);
 
-	JsonValueHolder(json::JsonValue&& val_): m_value(std::move(val_))
-	{}
+	JsonDefaultWriter<WriterStream<>> jsonWriter(stream);
 
-	JsonValueHolder(JsonValueHolder&& other): m_document(std::move(other.m_document)), m_value(std::move(other.m_value))
-	{
-		DEBUG_CHECK(m_document || m_value)
-	}
-
-	json::JsonValue& jsonValue() {
-		DEBUG_CHECK(m_document || m_value)
-
-		if (m_document) {
-			return *m_document;
-		}
-
-		return *m_value;
-	}
-
-	const json::JsonValue& jsonValue() const {
-		DEBUG_CHECK(m_document || m_value)
-
-		if (m_document) {
-			return *m_document;
-		}
-
-		return *m_value;
-	}	
-
-	rapidjson::Type jsonType() const {
-		return this->jsonValue().GetType();
-	}
-
-private:
-	std::optional<json::JsonDocument> m_document;
-	std::optional<json::JsonValue> m_value;
-};
-
-
-RuntimeValue::Ptr createJsonRuntimeValue(JsonValueHolder&&);
-
-
-
-class JsonNumberValue final
-	: public JsonValueHolder
-	, public RuntimeDoubleValue
-{
-	COMCLASS_(RuntimeDoubleValue, JsonValueHolder)
-
-public:
-	//
-	 JsonNumberValue(JsonValueHolder&& value_): JsonValueHolder(std::move(value_))
-	 {}
-
-	bool isMutable() const override {
-		return true;
-	}
-
-	double get() const override {
-		DEBUG_CHECK(jsonType() == rapidjson::Type::kNumberType)
-		return jsonValue().GetDouble();
-	}
-
-	Result<> set(double value) override {
-		jsonValue().SetDouble(value);
-		return success;
-	}
-};
-
-class JsonArrayValue final 
-	: public JsonValueHolder
-	, public RuntimeArrayValue
-{
-public:
-	//using JsonValueHolder::JsonValueHolder;
-
-	JsonArrayValue(JsonValueHolder&& value_): JsonValueHolder(std::move(value_))
-	{
-		initArrayElements();
-	}
-
-	bool isMutable() const override {
-		return true;
-	}
-
-	size_t size() const override {
-		return m_runtimeValues.size();
-	}
-
-	const RuntimeValue::Ptr element(size_t index) const override {
-		return m_runtimeValues[index];
-	}
-
-	RuntimeValue::Ptr element(size_t index) override {
-		return m_runtimeValues[index];
-	}
-
-	void clear(std::optional<size_t> reserve) override {
-	}
-
-	void pushBack(RuntimeValue::Ptr value) override {
-
-	}
-
-private:
-
-	using OptionalRuntimeValue = std::optional<std::unique_ptr<RuntimeValue::Ptr>>;
-
-	void initArrayElements() const
-	{
-		if (m_inited) {
-			return;
-		}
-		m_inited = true;
-		JsonValue::Array arr = const_cast<JsonArrayValue&>(*this).jsonValue().GetArray();
-
-		for (size_t i = 0; i < arr.Size(); ++i) {
-			json::JsonValue& el = arr[i];
-			m_runtimeValues.emplace_back(createJsonRuntimeValue(std::move(el)));
-		}
-	}
-
-	mutable bool m_inited = false;
-	mutable std::vector<RuntimeValue::Ptr> m_runtimeValues;
-};
-
-
-//class Json
-
-RuntimeValue::Ptr createJsonRuntimeValue(JsonValueHolder&& value) {
-
-	if (value.jsonType() == rapidjson::kNumberType) {
-		return cold::com::createInstance<JsonNumberValue>(std::move(value));
-	}
-	
-	if (value.jsonType() == rapidjson::kArrayType) {
-		return cold::com::createInstance<JsonNumberValue>(std::move(value));
-	}
-
-	return {};
-
-}
-
-
-
-} // namespace json
-
-
-/**
-*/
-class JsonSerialization final : public IJsonSerialization
-{
-	CLASS_INFO(
-		CLASS_BASE(IJsonSerialization)
-	)
-
-	IMPLEMENT_ANYTHING
-
-private:
-
-	Result<> serialize(io::Writer& writer, const RuntimeValue::Ptr value) const override {
-		JsonSettings settings;
-		settings.pretty = true;
-
-		return this->jsonSerialize(writer, value, settings);
-	}
-
-	Result<RuntimeValue::Ptr> deserialize(io::Reader& reader) const override {
-
-		json::JsonDocument document;
-		json::ReaderStream stream{reader};
-
-		if (auto result = json::parse(document, stream); !result) {
-			return result.err();
-		}
-
-		return json::createJsonRuntimeValue(std::move(document));
-
-
-//		return Excpt_("Failed");
-	}
-
-	Result<> deserializeInplace(io::Reader&, RuntimeValue::Ptr target) const override {
-		return Excpt_("Failed");
-	}
-
-	Result<> jsonSerialize(io::Writer& writer, const RuntimeValue::Ptr value, const JsonSettings& settings) const override {
-		json::WriterStream<> stream{writer};
-
-		if (settings.pretty) {
-			rapidjson::PrettyWriter<decltype(stream)> jsonWriter{stream};
-			return json::writeJsonValue(jsonWriter, value);
-		}
-		
-		rapidjson::Writer<decltype(stream)> jsonWriter{stream};
-		return json::writeJsonValue(jsonWriter, value);
-	}
-};
-
-//-----------------------------------------------------------------------------
-
-const IJsonSerialization& jsonSerialization()
-{
-	static JsonSerialization serializer;
-	return (serializer);
-}
-
-#endif
-
-
-Result<> jsonWrite(io::Writer&, const RuntimeValue::Ptr&, JsonSettings)
-{
-	return success;
+	return writeJsonValue(jsonWriter, value);
 }
 
 Result<RuntimeValue::Ptr> jsonParse(io::Reader& reader)
@@ -914,10 +633,10 @@ Result<RuntimeValue::Ptr> jsonParse(io::Reader& reader)
 	// return RuntimeValue::Ptr{};
 }
 
-Result<> jsonDeserialize(io::Reader&, RuntimeValue::Ptr)
-{
-	return success;
-}
+//Result<> jsonDeserialize(io::Reader&, RuntimeValue::Ptr)
+//{
+//	return success;
+//}
 
 
 }

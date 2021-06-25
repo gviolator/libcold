@@ -234,7 +234,7 @@ private:
 
 /**
 */
-template<meta::ArrayRepresentable T>
+template<typename T>
 class NativeArray final : public RuntimeArray
 {
 	COMCLASS_(RuntimeArray)
@@ -274,7 +274,7 @@ public:
 		}
 		else
 		{
-			meta::ArrayValueOperations<ContainerType>::clear(m_array);
+			meta::ArrayValueOperations<ContainerType>::clear(m_array, std::nullopt);
 		}
 	}
 
@@ -550,7 +550,7 @@ private:
 
 		FieldValueType& fieldValue = field.value();
 
-		return Field(field.name(), reinterpret_cast<void*>(&fieldValue), factory);
+		return Field(field.name(), reinterpret_cast<void*>(const_cast<std::remove_const_t<FieldValueType>*>(&fieldValue)), factory);
 	}
 
 

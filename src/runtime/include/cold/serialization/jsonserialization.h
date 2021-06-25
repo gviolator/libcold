@@ -18,7 +18,7 @@ RUNTIME_EXPORT Result<> jsonWrite(io::Writer&, const RuntimeValue::Ptr&, JsonSet
 
 RUNTIME_EXPORT Result<RuntimeValue::Ptr> jsonParse(io::Reader&);
 
-RUNTIME_EXPORT Result<> jsonDeserialize(io::Reader&, RuntimeValue::Ptr);
+// RUNTIME_EXPORT Result<> jsonDeserialize(io::Reader&, RuntimeValue::Ptr);
 
 
 /**
